@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wheel of Fortune — Zentryx</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='8' fill='%23000'/><text y='82' x='8' font-size='80' font-family='Arial' font-weight='900' fill='%2300eeff'>Z</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #dff0fa;
+  --bg2:       #cce8f7;
+  --surface:   #f5fbff;
+  --surface2:  #f0f8ff;
+  --surface3:  #e0f0fb;
+  --border:    #b8d8f0;
+  --border2:   #90c4e8;
+  --sky:       #38bdf8;
+  --sky2:      #0ea5e9;
+  --sky3:      #0284c7;
+  --blue:      #0055dd;
+  --blue2:     #1a77ff;
+  --cyan:      #06b6d4;
+  --cyan2:     #0891b2;
+  --gold:      #f59e0b;
+  --gold2:     #fbbf24;
+  --green:     #10b981;
+  --red:       #ef4444;
+  --text:      #0f2a3f;
+  --text2:     #3a6080;
+  --text3:     #7aaac8;
+  --white:     #f0f9ff;
+  --dark:      #0f1e2e;
+  --glow-sky:  0 0 28px rgba(56,189,248,0.45);
+  --glow-blue: 0 0 28px rgba(0,85,221,0.35);
+  --glow-gold: 0 0 28px rgba(245,158,11,0.5);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+.bg-fixed { position:fixed;inset:0;z-index:0;pointer-events:none; }
+.bg-grid {
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(56,189,248,0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56,189,248,0.12) 1px, transparent 1px);
+  background-size:60px 60px;
+}
+.bg-vignette {
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at center,transparent 30%,rgba(186,230,255,0.25) 100%);
+}
+
+/* ── HEADER ─────────────────────────────────────── */
+header {
+  position:relative;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;height:64px;
+  background:rgba(245,251,255,0.95);
+  border-bottom:1px solid var(--border);
+  box-shadow:0 2px 16px rgba(56,189,248,0.1);
+  backdrop-filter:blur(20px);
+}
+header::after {
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--sky),var(--sky2),transparent);
+  opacity:0.8;
+}
+.logo { display:flex;align-items:center;gap:12px;text-decoration:none; }
+.logo-z {
+  width:38px;height:38px;
+  background:linear-gradient(135deg,#e0f4ff,#ffffff);
+  border:1.5px solid var(--cyan);border-radius:5px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:900;color:var(--cyan);
+  box-shadow:0 0 16px rgba(0,238,255,0.3);flex-shrink:0;
+}
+.logo-text { display:flex;flex-direction:column;line-height:1; }
+.logo-name { font-family:'Sora',sans-serif;font-size:1.45rem;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--dark); }
+.logo-tag { font-family:'JetBrains Mono',monospace;font-size:0.5rem;letter-spacing:2px;color:var(--sky2);opacity:0.8;text-transform:uppercase;margin-top:2px; }
+.header-center { display:flex;align-items:center;gap:16px; }
+.chain-pill {
+  display:flex;align-items:center;gap:7px;
+  background:linear-gradient(135deg,rgba(14,165,233,0.15),rgba(6,182,212,0.1));
+  border:1px solid rgba(14,165,233,0.35);
+  padding:6px 14px;border-radius:100px;
+  font-size:0.72rem;font-family:'JetBrains Mono',monospace;color:var(--sky3);letter-spacing:1px;
+}
+.chain-live { width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite; }
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.wallet-btn {
+  display:flex;align-items:center;gap:7px;padding:8px 20px;
+  background:linear-gradient(135deg,var(--sky2) 0%,var(--sky3) 100%);
+  border:none;border-radius:6px;
+  font-family:'Sora',sans-serif;font-size:0.9rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;color:#fff;
+  cursor:pointer;transition:all 0.15s;
+}
+.wallet-btn:hover { transform:translateY(-1px);box-shadow:var(--glow-sky); }
+.wallet-btn.connected { background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:var(--green);border-radius:6px; }
+.back-link {
+  display:flex;align-items:center;gap:6px;
+  font-family:'Sora',sans-serif;font-size:0.8rem;font-weight:600;
+  text-decoration:none;color:var(--sky3);
+  padding:6px 12px;border:1px solid var(--border);border-radius:6px;
+  transition:all 0.15s;background:rgba(56,189,248,0.06);
+}
+.back-link:hover { background:rgba(56,189,248,0.14);border-color:var(--sky2); }
+
+/* ── LAYOUT ─────────────────────────────────────── */
+.app {
+  position:relative;z-index:1;
+  max-width:1280px;margin:0 auto;padding:20px 16px 40px;
+  display:grid;
+  grid-template-columns:280px 1fr 280px;
+  gap:16px;
+  align-items:start;
+}
+
+/* ── PANEL ─────────────────────────────────────── */
+.panel {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:18px;
+  box-shadow:0 2px 12px rgba(56,189,248,0.07);
+}
+.ptitle {
+  font-size:0.62rem;font-weight:700;letter-spacing:2px;
+  color:var(--text3);text-transform:uppercase;
+  font-family:'JetBrains Mono',monospace;
+  margin-bottom:14px;padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+.left-panel,.right-panel { display:flex;flex-direction:column;gap:14px; }
+
+/* Stats */
+.stat-row { display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border); }
+.stat-row:last-child { border-bottom:none; }
+.stat-k { font-size:0.75rem;color:var(--text2); }
+.stat-v { font-size:0.8rem;font-family:'JetBrains Mono',monospace;font-weight:500;color:var(--text); }
+.stat-v.hi { color:var(--gold);font-weight:700; }
+.stat-v.grn { color:var(--green); }
+
+/* XP display */
+.xp-big { text-align:center;padding:6px 0 12px; }
+.xp-num { font-family:'Sora',sans-serif;font-size:3rem;font-weight:800;line-height:1;color:var(--sky3);text-shadow:0 0 30px rgba(14,165,233,0.3); }
+.xp-unit { font-size:0.68rem;color:var(--text3);letter-spacing:3px;font-family:'JetBrains Mono',monospace;margin-top:4px; }
+.xp-track { height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:10px; }
+.xp-fill { height:100%;background:linear-gradient(90deg,var(--sky2),var(--cyan));border-radius:3px;transition:width 0.9s cubic-bezier(.34,1.3,.64,1); }
+.level-row { display:flex;justify-content:space-between;align-items:center;font-size:0.68rem;color:var(--text2);font-family:'JetBrains Mono',monospace;margin:8px 0 4px; }
+.level-cur { color:var(--sky3);font-weight:600; }
+
+/* History */
+.history-list { display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto; }
+.history-item {
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 10px;border-radius:8px;
+  background:var(--surface2);font-size:0.72rem;
+  animation:fadeSlide 0.25s ease;
+}
+@keyframes fadeSlide{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}
+.h-label { color:var(--text2);font-family:'JetBrains Mono',monospace;font-size:0.68rem; }
+.h-xp { font-family:'JetBrains Mono',monospace;font-weight:600; }
+.h-xp.jackpot { color:var(--gold); }
+.h-xp.great   { color:var(--sky2); }
+.h-xp.good    { color:var(--green); }
+.h-xp.basic   { color:var(--text3); }
+.h-xp.zero    { color:var(--red); }
+
+/* Leaderboard */
+.lb-item { display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--surface2);margin-bottom:5px; }
+.lb-rank { font-family:'Sora',sans-serif;font-size:0.9rem;font-weight:800;width:22px;text-align:center;flex-shrink:0; }
+.lb-rank.r1 { color:var(--gold); }
+.lb-rank.r2 { color:#94a3b8; }
+.lb-rank.r3 { color:#b45309; }
+.lb-rank.rn { color:var(--text3); }
+.lb-addr { font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--text2);flex:1; }
+.lb-xp  { font-family:'JetBrains Mono',monospace;font-size:0.8rem;font-weight:600;color:var(--gold); }
+.lb-empty { text-align:center;color:var(--text3);font-size:0.72rem;font-family:'JetBrains Mono',monospace;padding:20px 0; }
+
+/* Segments guide */
+.seg-grid { display:grid;grid-template-columns:1fr 1fr;gap:6px; }
+.seg-item {
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:9px 8px;text-align:center;
+}
+.seg-xp { font-family:'Sora',sans-serif;font-size:1.1rem;font-weight:800; }
+.seg-tag { font-size:0.58rem;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:1px;margin-top:1px; }
+
+/* ── WHEEL CENTER ─────────────────────────────────── */
+.game-area {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  box-shadow:0 4px 24px rgba(56,189,248,0.1);
+}
+.game-topbar {
+  padding:10px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+  background:rgba(240,248,255,0.8);
+}
+.game-topbar-left { font-size:0.68rem;font-family:'JetBrains Mono',monospace;color:var(--text3);letter-spacing:1.5px; }
+.game-topbar-right { font-size:0.72rem;font-family:'JetBrains Mono',monospace;color:var(--sky3); }
+
+.wheel-container {
+  display:flex;flex-direction:column;align-items:center;
+  padding:32px 24px 20px;gap:24px;flex:1;
+}
+
+/* Wheel canvas wrapper with pointer */
+.wheel-wrap {
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+}
+.wheel-pointer {
+  position:absolute;top:-4px;left:50%;transform:translateX(-50%);
+  width:0;height:0;z-index:10;
+  border-left:12px solid transparent;
+  border-right:12px solid transparent;
+  border-top:28px solid var(--sky3);
+  filter:drop-shadow(0 2px 6px rgba(2,132,199,0.6));
+}
+.wheel-center-btn {
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:54px;height:54px;border-radius:50%;z-index:10;
+  background:linear-gradient(135deg,var(--sky2),var(--sky3));
+  border:4px solid var(--surface);
+  box-shadow:0 0 20px rgba(14,165,233,0.5);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all 0.15s;
+  font-size:1.4rem;
+}
+.wheel-center-btn:hover { transform:translate(-50%,-50%) scale(1.1);box-shadow:0 0 30px rgba(14,165,233,0.7); }
+.wheel-center-btn:disabled { cursor:not-allowed;opacity:0.6;transform:translate(-50%,-50%); }
+
+/* Result display */
+.result-display {
+  text-align:center;
+  min-height:70px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;
+}
+.result-xp {
+  font-family:'Sora',sans-serif;font-size:3rem;font-weight:900;
+  line-height:1;
+  transition:all 0.3s;
+}
+.result-label { font-size:0.72rem;font-family:'JetBrains Mono',monospace;color:var(--text3);letter-spacing:2px;text-transform:uppercase; }
+
+/* SPIN button */
+.spin-btn-wrap {
+  padding:14px 20px;border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;flex-shrink:0;
+}
+.spin-btn {
+  flex:1;
+  background:linear-gradient(135deg,var(--sky2) 0%,var(--sky3) 100%);
+  border:none;color:#fff;
+  padding:14px 24px;border-radius:10px;
+  font-family:'Sora',sans-serif;font-size:1.1rem;font-weight:700;
+  letter-spacing:1px;cursor:pointer;
+  transition:all 0.18s;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  position:relative;overflow:hidden;
+}
+.spin-btn:hover:not(:disabled) { transform:translateY(-2px);box-shadow:var(--glow-sky); }
+.spin-btn:disabled {
+  background:var(--surface2);border:1px solid var(--border2);
+  color:var(--text3);cursor:not-allowed;transform:none;box-shadow:none;
+}
+.spin-btn.spinning { background:linear-gradient(135deg,var(--gold),#d97706); }
+
+/* TX status bar */
+.tx-bar {
+  margin:0 20px 12px;padding:10px 14px;border-radius:8px;
+  font-size:0.73rem;font-family:'JetBrains Mono',monospace;
+  display:none;align-items:center;gap:8px;line-height:1.4;
+}
+.tx-bar.show { display:flex; }
+.tx-bar.pending { background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);color:var(--gold); }
+.tx-bar.ok  { background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);color:var(--green); }
+.tx-bar.err { background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:var(--red); }
+.tx-spin { width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin 0.75s linear infinite;flex-shrink:0; }
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── POPUPS ─────────────────────────────────────── */
+.xp-popup {
+  position:fixed;pointer-events:none;
+  font-family:'Sora',sans-serif;font-size:1.8rem;font-weight:800;
+  color:var(--gold);
+  text-shadow:0 0 20px rgba(245,158,11,0.6);
+  z-index:9998;
+  animation:xpFloat 1.6s ease forwards;
+}
+@keyframes xpFloat {
+  0%{opacity:0;transform:translateY(0) scale(0.6);}
+  15%{opacity:1;transform:translateY(-15px) scale(1.15);}
+  60%{opacity:1;transform:translateY(-50px) scale(1);}
+  100%{opacity:0;transform:translateY(-90px) scale(0.85);}
+}
+.confetti-p {
+  position:fixed;pointer-events:none;z-index:9997;
+  border-radius:2px;animation:cfall 1.4s ease forwards;
+}
+@keyframes cfall{0%{opacity:1;transform:translateY(-10px) rotate(0deg);}100%{opacity:0;transform:translateY(180px) rotate(600deg);}}
+
+/* ── TOAST ─────────────────────────────────────── */
+.toast {
+  position:fixed;bottom:28px;right:28px;z-index:2000;
+  background:var(--surface);border:1px solid var(--border2);border-radius:10px;
+  padding:14px 20px;display:flex;align-items:center;gap:12px;
+  font-size:0.82rem;color:var(--text);
+  transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.34,1.3,.64,1);
+  max-width:320px;pointer-events:none;
+  box-shadow:0 4px 20px rgba(56,189,248,0.12);
+}
+.toast.show { transform:translateY(0);opacity:1; }
+.toast-close { margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;font-size:1rem;padding:0 0 0 8px; }
+
+/* ── WALLET MODAL ─────────────────────────────── */
+.modal-overlay {
+  position:fixed;inset:0;background:rgba(15,30,46,0.55);
+  backdrop-filter:blur(12px);z-index:1000;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity 0.2s;
+}
+.modal-overlay.open { opacity:1;pointer-events:all; }
+.modal {
+  background:var(--surface);border:1px solid var(--border2);border-radius:16px;
+  width:400px;max-width:95vw;padding:28px;
+  transform:translateY(16px);transition:transform 0.25s cubic-bezier(.34,1.3,.64,1);
+  position:relative;box-shadow:0 20px 60px rgba(14,165,233,0.15);
+}
+.modal-overlay.open .modal { transform:translateY(0); }
+.modal-title { font-family:'Sora',sans-serif;font-size:1.4rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--dark);margin-bottom:4px; }
+.modal-sub { font-size:0.78rem;color:var(--text2);margin-bottom:20px; }
+.modal-close {
+  position:absolute;top:14px;right:14px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--text2);font-size:0.85rem;transition:all 0.12s;
+}
+.modal-close:hover { color:var(--text);border-color:var(--border2); }
+.wallet-opt {
+  display:flex;align-items:center;justify-content:space-between;padding:11px 13px;
+  border:1px solid var(--border);border-radius:10px;margin-bottom:7px;
+  cursor:pointer;transition:all 0.12s;background:var(--surface2);
+}
+.wallet-opt:hover { border-color:var(--sky2);background:rgba(56,189,248,0.06); }
+.wallet-opt-left { display:flex;align-items:center;gap:11px; }
+.wallet-opt-icon { width:33px;height:33px;border-radius:8px;object-fit:cover;flex-shrink:0; }
+.wallet-opt-name { font-size:0.87rem;font-weight:600;color:var(--text); }
+.wallet-opt-tag { font-family:'JetBrains Mono',monospace;font-size:0.56rem;padding:2px 7px;border-radius:4px;letter-spacing:1px; }
+.wallet-opt-tag.found { background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:var(--green); }
+.wallet-opt-tag.none  { background:rgba(120,170,200,0.15);border:1px solid var(--border2);color:var(--text3); }
+
+/* ── RESPONSIVE ─────────────────────────────────── */
+@media(max-width:960px){
+  .app { grid-template-columns:1fr; }
+  .left-panel,.right-panel { display:none; }
+  header { padding:0 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-fixed">
+  <div class="bg-grid"></div>
+  <div class="bg-vignette"></div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <a class="logo" href="index.html">
+    <div class="logo-z">Z</div>
+    <div class="logo-text">
+      <div class="logo-name">Zentryx</div>
+      <div class="logo-tag">Own Your Progress</div>
+    </div>
+  </a>
+
+  <div class="header-center">
+    <div class="chain-pill">
+      <div class="chain-live"></div>
+      INK MAINNET
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:10px;">
+    <a class="back-link" href="index.html">← Home</a>
+    <button class="wallet-btn" id="walletBtn" onclick="walletBtnClick()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" fill="currentColor"/><path d="M22 11V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2"/></svg>
+      CONNECT
+    </button>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="panel">
+      <div class="ptitle">Player Profile</div>
+      <div class="xp-big">
+        <div class="xp-num" id="xpBig">0</div>
+        <div class="xp-unit">TOTAL XP EARNED</div>
+      </div>
+      <div class="level-row">
+        <span class="level-cur" id="lvlLabel">Level 1</span>
+        <span id="lvlNext">→ 200 XP</span>
+      </div>
+      <div class="xp-track"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="ptitle">Session Stats</div>
+      <div class="stat-row"><span class="stat-k">Spins</span><span class="stat-v" id="stSpins">0</span></div>
+      <div class="stat-row"><span class="stat-k">Best Spin</span><span class="stat-v hi" id="stBest">—</span></div>
+      <div class="stat-row"><span class="stat-k">Average XP</span><span class="stat-v" id="stAvg">—</span></div>
+      <div class="stat-row"><span class="stat-k">Jackpots 🎰</span><span class="stat-v grn" id="stJackpots">0</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="ptitle">Spin History</div>
+      <div class="history-list" id="historyList">
+        <div style="text-align:center;color:var(--text3);font-size:0.72rem;font-family:'JetBrains Mono',monospace;padding:18px 0">No spins yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHEEL CENTER -->
+  <div class="game-area">
+    <div class="game-topbar">
+      <div class="game-topbar-left">WHEEL OF FORTUNE · INK CHAIN</div>
+      <div class="game-topbar-right" id="spinStatusText">READY TO SPIN</div>
+    </div>
+
+    <div class="wheel-container">
+      <!-- Wheel -->
+      <div class="wheel-wrap">
+        <div class="wheel-pointer"></div>
+        <canvas id="wheelCanvas" width="400" height="400"></canvas>
+        <button class="wheel-center-btn" id="centerBtn" onclick="handleSpin()" title="Spin!">🎡</button>
+      </div>
+
+      <!-- Result -->
+      <div class="result-display" id="resultDisplay">
+        <div class="result-xp" id="resultXP" style="color:var(--text3)">—</div>
+        <div class="result-label" id="resultLabel">spin to win xp</div>
+      </div>
+    </div>
+
+    <div class="tx-bar" id="txBar">
+      <div class="tx-spin" id="txSpin"></div>
+      <span id="txMsg">Confirming on Ink...</span>
+    </div>
+
+    <div class="spin-btn-wrap">
+      <button class="spin-btn" id="spinBtn" onclick="handleSpin()">
+        🎡 SPIN
+      </button>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="panel">
+      <div class="ptitle">Wheel Segments</div>
+      <div class="seg-grid">
+        <div class="seg-item" style="border-color:rgba(245,158,11,0.5)">
+          <div class="seg-xp" style="color:var(--gold)">500</div>
+          <div class="seg-tag">JACKPOT</div>
+        </div>
+        <div class="seg-item" style="border-color:rgba(14,165,233,0.4)">
+          <div class="seg-xp" style="color:var(--sky2)">200</div>
+          <div class="seg-tag">GREAT</div>
+        </div>
+        <div class="seg-item" style="border-color:rgba(16,185,129,0.4)">
+          <div class="seg-xp" style="color:var(--green)">100</div>
+          <div class="seg-tag">GOOD</div>
+        </div>
+        <div class="seg-item" style="border-color:rgba(14,165,233,0.25)">
+          <div class="seg-xp" style="color:var(--sky3)">50</div>
+          <div class="seg-tag">OK</div>
+        </div>
+        <div class="seg-item" style="border-color:rgba(122,170,200,0.3)">
+          <div class="seg-xp" style="color:var(--text3)">25</div>
+          <div class="seg-tag">BASIC</div>
+        </div>
+        <div class="seg-item" style="border-color:rgba(239,68,68,0.3)">
+          <div class="seg-xp" style="color:var(--red)">0</div>
+          <div class="seg-tag">MISS</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="ptitle">Leaderboard</div>
+      <div id="leaderboard"><div class="lb-empty">Loading...</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="ptitle">How It Works</div>
+      <div style="font-size:0.78rem;color:var(--text2);line-height:1.7;display:flex;flex-direction:column;gap:8px;">
+        <div>🎡 Each spin triggers an onchain transaction on Ink Chain.</div>
+        <div>⚡ XP is awarded based on where the wheel lands.</div>
+        <div>🏆 500 XP = Jackpot — rarest outcome.</div>
+        <div>📊 XP is tracked globally on the leaderboard.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WALLET MODAL -->
+<div class="modal-overlay" id="walletModal" onclick="closeModalOuter(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Connect Wallet</div>
+    <div class="modal-sub">Connect to spin, earn XP, and appear on the leaderboard.</div>
+    <div id="walletList"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toastIcon">📢</span>
+  <span id="toastMsg"></span>
+  <button class="toast-close" onclick="hideToast()">✕</button>
+</div>
+
+<script>
+// ─── CONFIG ─────────────────────────────────────────────────
+const SUPABASE_URL = 'https://wbrspewpvzoziqfinpfd.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndicnNwZXdwdnpvemlxZmlucGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNTQ2MjEsImV4cCI6MjA4OTgzMDYyMX0.j_MgjstUKK6K9DnCEcC4ilIocHY3VNCwMNiT47BrBUo';
+
+// ⚠️ Replace with your deployed Ink Chain Wheel of Fortune contract address
+const CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';
+// Function selector for spin() — update when contract deployed
+const SPIN_SELECTOR = '0x9abc1234';
+// Ink Chain ID
+const INK_CHAIN_ID = '0xdef1'; // 57073 in hex — Ink Mainnet
+
+const LEVELS = [0,200,500,1000,2000,4000,8000,15000,28000,50000,90000,150000,250000,400000,650000];
+
+// Wheel segments: [xp, label, color, weight]
+const SEGMENTS = [
+  { xp:500, label:'500 XP',  color:'#f59e0b', weight:1  },
+  { xp:25,  label:'25 XP',   color:'#7aaac8', weight:10 },
+  { xp:100, label:'100 XP',  color:'#10b981', weight:5  },
+  { xp:0,   label:'MISS',    color:'#ef4444', weight:6  },
+  { xp:200, label:'200 XP',  color:'#0ea5e9', weight:3  },
+  { xp:25,  label:'25 XP',   color:'#7aaac8', weight:10 },
+  { xp:50,  label:'50 XP',   color:'#0284c7', weight:8  },
+  { xp:0,   label:'MISS',    color:'#ef4444', weight:6  },
+  { xp:100, label:'100 XP',  color:'#10b981', weight:5  },
+  { xp:25,  label:'25 XP',   color:'#7aaac8', weight:10 },
+  { xp:200, label:'200 XP',  color:'#0ea5e9', weight:3  },
+  { xp:50,  label:'50 XP',   color:'#0284c7', weight:8  },
+];
+
+// Build arc sizes from weights
+const totalWeight = SEGMENTS.reduce((a,s)=>a+s.weight,0);
+SEGMENTS.forEach(s => s.arc = (s.weight / totalWeight) * (Math.PI * 2));
+
+// ─── STATE ─────────────────────────────────────────────────
+const S = {
+  connected: false,
+  wallet: null,
+  totalXP: 0,
+  spins: 0,
+  bestSpin: 0,
+  jackpots: 0,
+  history: [],
+  spinning: false,
+  currentAngle: 0,
+};
+
+// ─── WHEEL DRAWING ─────────────────────────────────────────
+const canvas = document.getElementById('wheelCanvas');
+const ctx = canvas.getContext('2d');
+const CX = canvas.width / 2;
+const CY = canvas.height / 2;
+const R  = canvas.width / 2 - 8;
+
+function drawWheel(angle) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Outer glow ring
+  ctx.save();
+  ctx.shadowBlur = 24;
+  ctx.shadowColor = 'rgba(14,165,233,0.4)';
+  ctx.beginPath();
+  ctx.arc(CX, CY, R + 4, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(14,165,233,0.25)';
+  ctx.lineWidth = 6;
+  ctx.stroke();
+  ctx.restore();
+
+  let startAngle = angle;
+  SEGMENTS.forEach((seg, i) => {
+    const endAngle = startAngle + seg.arc;
+
+    // Segment fill
+    ctx.beginPath();
+    ctx.moveTo(CX, CY);
+    ctx.arc(CX, CY, R, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = seg.color;
+    ctx.fill();
+
+    // Segment border
+    ctx.beginPath();
+    ctx.moveTo(CX, CY);
+    ctx.arc(CX, CY, R, startAngle, endAngle);
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Label
+    const midAngle = startAngle + seg.arc / 2;
+    const labelR   = R * 0.68;
+    const lx = CX + labelR * Math.cos(midAngle);
+    const ly = CY + labelR * Math.sin(midAngle);
+
+    ctx.save();
+    ctx.translate(lx, ly);
+    ctx.rotate(midAngle + Math.PI / 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${seg.arc > 0.4 ? 13 : 11}px 'Sora', sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowBlur = 4;
+    ctx.shadowColor = 'rgba(0,0,0,0.4)';
+    ctx.fillText(seg.label, 0, 0);
+    ctx.restore();
+
+    startAngle = endAngle;
+  });
+
+  // Center hub
+  const hubGrad = ctx.createRadialGradient(CX, CY, 0, CX, CY, 30);
+  hubGrad.addColorStop(0, '#e0f4ff');
+  hubGrad.addColorStop(1, '#0ea5e9');
+  ctx.beginPath();
+  ctx.arc(CX, CY, 30, 0, Math.PI * 2);
+  ctx.fillStyle = hubGrad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+drawWheel(0);
+
+// ─── SPIN LOGIC ─────────────────────────────────────────────
+function pickWeightedSegment() {
+  const rand = Math.random() * totalWeight;
+  let cumulative = 0;
+  for (let i = 0; i < SEGMENTS.length; i++) {
+    cumulative += SEGMENTS[i].weight;
+    if (rand < cumulative) return i;
+  }
+  return SEGMENTS.length - 1;
+}
+
+function getAngleForSegment(segIndex) {
+  // Calculate the center angle of the winning segment
+  let startAngle = 0;
+  for (let i = 0; i < segIndex; i++) startAngle += SEGMENTS[i].arc;
+  const midAngle = startAngle + SEGMENTS[segIndex].arc / 2;
+  // The pointer is at the top (−π/2). We need midAngle to land at top.
+  return -midAngle - Math.PI / 2;
+}
+
+function animateSpin(targetAngle, onDone) {
+  const extraSpins = (4 + Math.floor(Math.random() * 4)) * Math.PI * 2;
+  const from = S.currentAngle % (Math.PI * 2);
+  // Normalize target so it lands correctly after extra spins
+  const to = targetAngle + extraSpins;
+  const duration = 3500 + Math.random() * 800;
+  const startTime = performance.now();
+
+  function easeOut(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  function frame(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(1, elapsed / duration);
+    const angle = from + (to - from) * easeOut(t);
+    S.currentAngle = angle;
+    drawWheel(angle);
+
+    if (t < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      S.currentAngle = targetAngle;
+      drawWheel(targetAngle);
+      onDone();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+// ─── HANDLE SPIN ─────────────────────────────────────────────
+async function handleSpin() {
+  if (S.spinning) return;
+  if (!S.connected) { openWalletModal(); return; }
+
+  S.spinning = true;
+  setSpinUI(false);
+  document.getElementById('spinStatusText').textContent = 'CONFIRMING TX...';
+  document.getElementById('resultXP').style.color = 'var(--text3)';
+  document.getElementById('resultXP').textContent = '—';
+  document.getElementById('resultLabel').textContent = 'spin in progress...';
+
+  showTX('pending', 'Waiting for wallet confirmation...');
+
+  try {
+    const txHash = await window.ethereum.request({
+      method: 'eth_sendTransaction',
+      params: [{
+        from: S.wallet,
+        to: CONTRACT_ADDRESS,
+        value: '0x0',
+        data: SPIN_SELECTOR,
+        chainId: INK_CHAIN_ID,
+        gas: '0x15F90',
+      }]
+    });
+
+    showTX('pending', 'Confirming on Ink Chain...');
+    document.getElementById('spinStatusText').textContent = 'TX PENDING...';
+
+    // Wait for confirmation
+    let receipt = null;
+    let attempts = 0;
+    while (!receipt && attempts < 30) {
+      await sleep(1200);
+      attempts++;
+      try {
+        receipt = await window.ethereum.request({
+          method: 'eth_getTransactionReceipt',
+          params: [txHash]
+        });
+      } catch(e){}
+    }
+
+    if (!receipt || receipt.status === '0x0') {
+      hideTX();
+      showToast('Transaction failed on chain', '❌');
+      S.spinning = false;
+      setSpinUI(true);
+      document.getElementById('spinStatusText').textContent = 'TX FAILED';
+      return;
+    }
+
+    hideTX();
+    document.getElementById('spinStatusText').textContent = 'SPINNING...';
+
+    // Pick outcome and animate
+    const segIndex = pickWeightedSegment();
+    const targetAngle = getAngleForSegment(segIndex);
+    const seg = SEGMENTS[segIndex];
+
+    animateSpin(targetAngle, () => {
+      onSpinLanded(seg, segIndex);
+    });
+
+  } catch(e) {
+    console.error(e);
+    hideTX();
+    if (e.code !== 4001) showToast('Transaction rejected', '❌');
+    S.spinning = false;
+    setSpinUI(true);
+    document.getElementById('spinStatusText').textContent = 'READY TO SPIN';
+  }
+}
+
+function onSpinLanded(seg, segIndex) {
+  const xp = seg.xp;
+
+  // Update state
+  S.totalXP += xp;
+  S.spins++;
+  if (xp > S.bestSpin) S.bestSpin = xp;
+  if (xp === 500) S.jackpots++;
+  S.history.unshift(xp);
+  if (S.history.length > 25) S.history.pop();
+
+  // Result display
+  const resultEl = document.getElementById('resultXP');
+  const labelEl  = document.getElementById('resultLabel');
+  const colorMap = { 500:'var(--gold)', 200:'var(--sky2)', 100:'var(--green)', 50:'var(--sky3)', 25:'var(--text3)', 0:'var(--red)' };
+  const labelMap = { 500:'🏆 JACKPOT!', 200:'⚡ GREAT SPIN!', 100:'✦ GOOD SPIN', 50:'→ OK', 25:'→ BASIC', 0:'✗ MISS — NO XP' };
+
+  resultEl.style.color = colorMap[xp] || 'var(--text3)';
+  resultEl.textContent = xp > 0 ? `+${xp} XP` : 'MISS';
+  labelEl.textContent  = labelMap[xp] || '';
+
+  // Popup + confetti
+  if (xp > 0) showXPPop(xp);
+  if (xp >= 200) spawnConfetti();
+
+  // Refresh UI
+  refreshUI();
+  addHistory(xp);
+  saveData();
+  renderLeaderboard();
+
+  // Done
+  S.spinning = false;
+  setSpinUI(true);
+  document.getElementById('spinStatusText').textContent = 'READY TO SPIN';
+  document.getElementById('centerBtn').disabled = false;
+}
+
+function setSpinUI(enabled) {
+  const btn = document.getElementById('spinBtn');
+  const center = document.getElementById('centerBtn');
+  if (enabled) {
+    btn.disabled = false;
+    btn.className = 'spin-btn';
+    btn.innerHTML = '🎡 SPIN';
+    center.disabled = false;
+  } else {
+    btn.disabled = true;
+    btn.className = 'spin-btn spinning';
+    btn.innerHTML = '<div class="tx-spin"></div> SPINNING...';
+    center.disabled = true;
+  }
+}
+
+// ─── UI REFRESH ─────────────────────────────────────────────
+function refreshUI() {
+  countUp('xpBig', S.totalXP);
+
+  let lvl = 1;
+  for (let i = 0; i < LEVELS.length - 1; i++) { if (S.totalXP >= LEVELS[i]) lvl = i + 1; }
+  const lvlXP = LEVELS[lvl-1]||0;
+  const nxtXP = LEVELS[lvl]||(lvlXP+15000);
+  const pct   = Math.min(100,((S.totalXP-lvlXP)/(nxtXP-lvlXP))*100);
+
+  document.getElementById('lvlLabel').textContent = 'Level ' + lvl;
+  document.getElementById('lvlNext').textContent  = lvl >= LEVELS.length ? '✦ MAX LEVEL' : '→ ' + nxtXP.toLocaleString() + ' XP';
+  document.getElementById('xpFill').style.width   = pct + '%';
+
+  document.getElementById('stSpins').textContent    = S.spins;
+  document.getElementById('stBest').textContent     = S.bestSpin > 0 ? S.bestSpin + ' XP' : '—';
+  document.getElementById('stJackpots').textContent = S.jackpots;
+  const avg = S.spins > 0 ? Math.round(S.totalXP / S.spins) : 0;
+  document.getElementById('stAvg').textContent = S.spins > 0 ? avg + ' XP' : '—';
+}
+
+function countUp(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const start = parseInt(el.textContent.replace(/,/g,''))||0;
+  if (start === target) return;
+  const dur = 700, t0 = performance.now();
+  const step = (now) => {
+    const t = Math.min(1,(now-t0)/dur);
+    const e = 1 - Math.pow(1-t,3);
+    el.textContent = Math.round(start+(target-start)*e).toLocaleString();
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function addHistory(xp) {
+  const list = document.getElementById('historyList');
+  if (S.history.length === 1) list.innerHTML = '';
+  const clsMap = { 500:'jackpot', 200:'great', 100:'good', 50:'good', 25:'basic', 0:'zero' };
+  const lblMap = { 500:'🏆 Jackpot', 200:'⚡ Great', 100:'✦ Good', 50:'→ OK', 25:'· Basic', 0:'✗ Miss' };
+  const cls = clsMap[xp] || 'basic';
+  const lbl = lblMap[xp] || '· Spin';
+  const item = document.createElement('div');
+  item.className = 'history-item';
+  item.innerHTML = `<span class="h-label">${lbl}</span><span class="h-xp ${cls}">${xp > 0 ? '+'+xp+' XP' : '0 XP'}</span>`;
+  list.insertBefore(item, list.firstChild);
+  while (list.children.length > 20) list.removeChild(list.lastChild);
+}
+
+// ─── LEADERBOARD ────────────────────────────────────────────
+async function renderLeaderboard() {
+  const lb = document.getElementById('leaderboard');
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?order=total_xp.desc&limit=5`, {
+      headers:{ 'apikey':SUPABASE_KEY, 'Authorization':`Bearer ${SUPABASE_KEY}` }
+    });
+    const data = await res.json();
+    if (!data || data.length === 0) { lb.innerHTML = '<div class="lb-empty">No players yet</div>'; return; }
+    const rcls = ['r1','r2','r3','rn','rn'];
+    const rmed = ['🥇','🥈','🥉','4','5'];
+    lb.innerHTML = data.map((p,i) => `
+      <div class="lb-item">
+        <div class="lb-rank ${rcls[i]}">${rmed[i]}</div>
+        <div class="lb-addr">${p.wallet}</div>
+        <div class="lb-xp">${(p.total_xp||0).toLocaleString()}</div>
+      </div>`).join('');
+  } catch(e) {
+    lb.innerHTML = '<div class="lb-empty">Failed to load</div>';
+  }
+}
+
+// ─── PERSIST ────────────────────────────────────────────────
+async function saveData() {
+  if (!S.wallet) return;
+  localStorage.setItem('wof_'+S.wallet.slice(0,10), JSON.stringify({
+    totalXP: S.totalXP, spins: S.spins, bestSpin: S.bestSpin,
+    jackpots: S.jackpots, history: S.history.slice(0,15)
+  }));
+  try {
+    const short = S.wallet.slice(0,6)+'...'+S.wallet.slice(-4);
+    await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({
+        wallet: short, total_xp: S.totalXP,
+        games_played: S.spins, updated_at: new Date().toISOString()
+      })
+    });
+  } catch(e) { console.error('Leaderboard sync failed:', e); }
+}
+
+function loadData() {
+  if (!S.wallet) return;
+  const raw = localStorage.getItem('wof_'+S.wallet.slice(0,10));
+  if (!raw) return;
+  const d = JSON.parse(raw);
+  S.totalXP = d.totalXP||0; S.spins = d.spins||0;
+  S.bestSpin = d.bestSpin||0; S.jackpots = d.jackpots||0;
+  S.history = d.history||[];
+  refreshUI();
+  if (S.history.length) {
+    document.getElementById('historyList').innerHTML = '';
+    [...S.history].reverse().forEach(xp => addHistory(xp));
+  }
+}
+
+// ─── WALLET ─────────────────────────────────────────────────
+const WALLETS = [
+  { name:'Rabby Wallet',     icon:'https://raw.githubusercontent.com/RabbyHub/Rabby/develop/src/assets/images/icon-128.png', detect:()=>!!(window.ethereum?.isRabby), install:'https://rabby.io' },
+  { name:'MetaMask',         icon:'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg', detect:()=>!!(window.ethereum?.isMetaMask&&!window.ethereum?.isRabby), install:'https://metamask.io' },
+  { name:'Coinbase Wallet',  icon:`data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230052ff'/><circle cx='50' cy='50' r='35' fill='white'/><circle cx='50' cy='50' r='22' fill='%230052ff'/></svg>`, detect:()=>!!(window.ethereum?.isCoinbaseWallet), install:'https://www.coinbase.com/wallet' },
+  { name:'Other EVM Wallet', icon:`data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230052ff'/><text y='.9em' font-size='70' x='10'>🌐</text></svg>`, detect:()=>!!(window.ethereum), install:null }
+];
+
+function openWalletModal() {
+  buildWalletList();
+  document.getElementById('walletModal').classList.add('open');
+}
+function closeModal() { document.getElementById('walletModal').classList.remove('open'); }
+function closeModalOuter(e) { if (e.target.id==='walletModal') closeModal(); }
+
+function buildWalletList() {
+  const el = document.getElementById('walletList');
+  el.innerHTML = '';
+  WALLETS.forEach(w => {
+    const found = w.detect();
+    const div = document.createElement('div');
+    div.className = 'wallet-opt';
+    div.innerHTML = `
+      <div class="wallet-opt-left">
+        <img src="${w.icon}" class="wallet-opt-icon" style="background:#f0f8ff;border:1px solid #b8d8f0;padding:4px;border-radius:8px;" onerror="this.style.display='none'"/>
+        <div class="wallet-opt-name">${w.name}</div>
+      </div>
+      <span class="wallet-opt-tag ${found?'found':'none'}">${found?'● Detected':w.install?'Not Installed':'Not Detected'}</span>`;
+    div.onclick = () => { if (found) connectWallet(); else if (w.install) window.open(w.install,'_blank'); else connectWallet(); };
+    el.appendChild(div);
+  });
+}
+
+async function connectWallet() {
+  if (!window.ethereum) { showToast('No wallet detected. Install MetaMask or Rabby.','⚠️'); return; }
+  try {
+    const accounts = await window.ethereum.request({ method:'eth_requestAccounts' });
+    S.wallet = accounts[0]; S.connected = true;
+    // Switch to Ink chain
+    try {
+      await window.ethereum.request({ method:'wallet_switchEthereumChain', params:[{chainId: INK_CHAIN_ID}] });
+    } catch(sw) {
+      if (sw.code === 4902) {
+        await window.ethereum.request({
+          method:'wallet_addEthereumChain',
+          params:[{ chainId: INK_CHAIN_ID, chainName:'Ink Mainnet',
+            nativeCurrency:{name:'ETH',symbol:'ETH',decimals:18},
+            rpcUrls:['https://rpc-qnd.inkonchain.com'],
+            blockExplorerUrls:['https://explorer.inkonchain.com'] }]
+        });
+      }
+    }
+    closeModal();
+    onConnected();
+  } catch(e) { console.error(e); }
+}
+
+function walletBtnClick() {
+  if (S.connected) {
+    S.connected = false; S.wallet = null; S.totalXP = 0; S.spins = 0;
+    S.bestSpin = 0; S.jackpots = 0; S.history = [];
+    const btn = document.getElementById('walletBtn');
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" fill="currentColor"/><path d="M22 11V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2"/></svg> CONNECT`;
+    btn.classList.remove('connected');
+    document.getElementById('xpBig').textContent = '0';
+    document.getElementById('historyList').innerHTML = '<div style="text-align:center;color:var(--text3);font-size:0.72rem;font-family:\'JetBrains Mono\',monospace;padding:18px 0">No spins yet</div>';
+    refreshUI();
+  } else {
+    openWalletModal();
+  }
+}
+
+async function onConnected() {
+  const btn = document.getElementById('walletBtn');
+  btn.innerHTML = `✓ ${S.wallet.slice(0,6)}...${S.wallet.slice(-4)}`;
+  btn.classList.add('connected');
+  loadData();
+  refreshUI();
+  renderLeaderboard();
+}
+
+// ─── EFFECTS ─────────────────────────────────────────────────
+function showXPPop(xp) {
+  const pop = document.createElement('div');
+  pop.className = 'xp-popup';
+  pop.style.left = (window.innerWidth/2 - 40) + 'px';
+  pop.style.top  = (window.innerHeight/2 - 80) + 'px';
+  pop.textContent = '+' + xp + ' XP';
+  if (xp >= 500) { pop.style.fontSize = '2.4rem'; pop.style.color = '#f59e0b'; }
+  else if (xp >= 200) { pop.style.color = '#0ea5e9'; }
+  document.body.appendChild(pop);
+  setTimeout(() => pop.remove(), 1700);
+}
+
+function spawnConfetti() {
+  const cols = ['#f59e0b','#38bdf8','#10b981','#0ea5e9','#fbbf24','#06b6d4'];
+  for (let i = 0; i < 28; i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      p.className = 'confetti-p';
+      p.style.cssText = `left:${window.innerWidth/2+(Math.random()-0.5)*160}px;top:${window.innerHeight/2-20}px;
+        width:${4+Math.random()*6}px;height:${4+Math.random()*6}px;
+        background:${cols[Math.floor(Math.random()*cols.length)]};
+        animation-duration:${0.8+Math.random()*0.8}s;
+        animation-delay:${Math.random()*0.3}s;
+        transform:rotate(${Math.random()*360}deg)`;
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 2000);
+    }, i * 20);
+  }
+}
+
+// ─── TX HELPERS ──────────────────────────────────────────────
+function showTX(type, msg) {
+  const bar = document.getElementById('txBar');
+  const spin = document.getElementById('txSpin');
+  bar.className = 'tx-bar show ' + (type==='pending'?'pending':type==='ok'?'ok':'err');
+  document.getElementById('txMsg').textContent = msg;
+  spin.style.display = type === 'pending' ? 'block' : 'none';
+}
+function hideTX() { document.getElementById('txBar').className = 'tx-bar'; }
+
+// ─── TOAST ───────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, icon='📢') {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastIcon').textContent = icon;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
+}
+function hideToast() { document.getElementById('toast').classList.remove('show'); }
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─── INIT ────────────────────────────────────────────────────
+renderLeaderboard();
+</script>
+</body>
+</html>
