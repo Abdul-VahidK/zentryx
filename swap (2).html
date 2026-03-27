@@ -82,6 +82,8 @@ input[type=text]:focus{border-color:var(--sky2)}
 .confirm-text{font-size:.8rem;color:var(--text2)}
 .confirm-btn{padding:11px 28px;border:none;border-radius:10px;font-family:'Sora',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--green),#059669);white-space:nowrap;transition:all .2s}
 .confirm-btn:disabled{background:var(--surface3);color:var(--text3);cursor:not-allowed}
+.trade-locked{pointer-events:none;opacity:0.35;user-select:none;}
+.trade-locked-msg{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:2px;color:var(--text3);padding:10px 0 4px;text-transform:uppercase;}
 /* INVENTORY */
 .inventory-panel{background:var(--surface);border:1px solid var(--border-color);border-radius:12px;padding:16px}
 .inv-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color)}
@@ -113,34 +115,9 @@ input[type=text]:focus{border-color:var(--sky2)}
 </header>
 
 <main>
-  <!-- CONNECT SCREEN -->
-  <div id="screen-connect">
-    <div class="live-badge"><div class="live-dot"></div> P2P Trading Room</div>
-    <h1 class="screen-title">P2P Swap</h1>
-    <p class="screen-sub">Generate your trade code, share it with a peer, or enter theirs to start a swap.</p>
-    <div class="card">
-      <div class="card-label">Your Trade Code</div>
-      <div class="code-display" id="code-display" style="display:none">
-        <span class="my-code" id="my-code">—</span>
-        <button class="copy-btn" id="copy-btn" onclick="copyCode()">Copy</button>
-      </div>
-      <button class="connect-btn" id="gen-btn" onclick="generateCode()" style="margin-top:0" disabled>
-        Generate Code
-      </button>
-      <p id="gen-hint" style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--text3);letter-spacing:1px;margin-top:10px;text-align:center">
-        Connect wallet to generate a trade code
-      </p>
-    </div>
-    <div class="card">
-      <div class="card-label">Connect to Peer</div>
-      <label class="input-label">Peer's Trade Code</label>
-      <input type="text" id="peer-input" placeholder="e.g. XK7M2P" maxlength="8" oninput="checkReady()" onkeydown="if(event.key==='Enter')doConnect()">
-      <button class="connect-btn" id="connect-btn" onclick="doConnect()" disabled>Connect &amp; Trade</button>
-    </div>
-  </div>
 
   <!-- TRADE ROOM -->
-  <div id="screen-trade" style="display:none">
+  <div id="screen-trade" style="display:grid">
     <div style="grid-column:1/-1">
       <div class="trade-topbar">
         <div style="display:flex;align-items:center;gap:10px">
@@ -152,12 +129,22 @@ input[type=text]:focus{border-color:var(--sky2)}
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           <div class="phase-badge" id="phase-badge">Building Offer</div>
+          <div id="code-display" style="display:none;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border-color);border-radius:8px;padding:6px 14px;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text3);letter-spacing:1px">YOUR CODE</span>
+            <span class="my-code" id="my-code" style="font-family:'Sora',sans-serif;font-size:1rem;font-weight:900;letter-spacing:3px;color:var(--sky3)">—</span>
+            <button class="copy-btn" id="copy-btn" onclick="copyCode()" style="padding:4px 10px;font-size:.55rem">Copy</button>
+          </div>
+          <button class="connect-btn gen-ready" id="gen-btn" onclick="generateCode()" style="width:auto;padding:8px 18px;border-radius:8px;font-size:.82rem" disabled>
+            Generate Code
+          </button>
           <button class="cancel-btn" onclick="cancelTrade()">Cancel Trade</button>
         </div>
       </div>
     </div>
 
     <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="trade-locked-msg" id="lock-msg">⚠ Connect wallet to enable trading</div>
+      <div id="trade-body" class="trade-locked" style="display:flex;flex-direction:column;gap:12px">
       <div class="trade-panels">
         <!-- My side -->
         <div>
@@ -193,18 +180,22 @@ input[type=text]:focus{border-color:var(--sky2)}
         <button class="confirm-btn" id="confirm-btn" onclick="confirmTrade()">Confirm Trade</button>
       </div>
     </div>
+  </div><!-- /trade-body -->
 
-    <div class="inventory-panel">
+  <div id="inventory-panel-wrap" class="trade-locked">
       <div class="inv-label">Your Inventory</div>
       <div id="inventory"></div>
     </div>
-  </div>
+  </div><!-- /inventory-panel-wrap -->
 </main>
 
 <script>
 const CHARS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function genCode(){return Array.from({length:6},()=>CHARS[Math.floor(Math.random()*CHARS.length)]).join('')}
 let MY_CODE='';
+// Render on load — trade room is shown immediately
+renderInventory();
+renderPeerOffer();
 let myOffer=[];
 let myConfirmed=false;
 
@@ -234,30 +225,14 @@ function copyCode(){
   setTimeout(()=>{b.textContent='Copy';b.classList.remove('copied')},2000);
 }
 
-function checkReady(){
-  const v=document.getElementById('peer-input').value;
-  const btn=document.getElementById('connect-btn');
-  if(v.length>=4){btn.disabled=false;btn.classList.add('ready')}
-  else{btn.disabled=true;btn.classList.remove('ready')}
-}
-
-function doConnect(){
-  const code=document.getElementById('peer-input').value.toUpperCase();
-  if(code.length<4)return;
-  document.getElementById('screen-connect').style.display='none';
-  const trade=document.getElementById('screen-trade');
-  trade.style.display='grid';
-  document.getElementById('peer-label').textContent=code;
-  document.getElementById('peer-panel-name').textContent=code;
-  document.getElementById('peer-avatar').textContent=code[0];
-  renderInventory();
-  renderPeerOffer();
-}
 
 function cancelTrade(){
-  document.getElementById('screen-trade').style.display='none';
-  document.getElementById('screen-connect').style.display='block';
   myOffer=[];myConfirmed=false;
+  document.getElementById('my-offer-body').innerHTML='<div class="empty-msg"><div style="font-size:1.8rem">📦</div><div>Add items from your inventory</div></div>';
+  document.getElementById('peer-label').textContent='—';
+  document.getElementById('peer-avatar').textContent='P';
+  document.getElementById('phase-badge').textContent='Building Offer';
+  updateConfirmBtn();
 }
 
 function renderInventory(){
@@ -342,30 +317,41 @@ function confirmTrade(){
 
 function connectWallet(btn){
   const genBtn=document.getElementById('gen-btn');
-  const hint=document.getElementById('gen-hint');
+  const tradeBody=document.getElementById('trade-body');
+  const invWrap=document.getElementById('inventory-panel-wrap');
+  const lockMsg=document.getElementById('lock-msg');
+
   if(btn.dataset.connected){
+    // Disconnect
     btn.textContent='Connect Wallet';
     btn.style.background='linear-gradient(135deg,#0ea5e9,#0284c7)';
     btn.style.color='#fff';
     delete btn.dataset.connected;
-    // Disable generate button and hide code on disconnect
+    // Lock everything
+    tradeBody.classList.add('trade-locked');
+    invWrap.classList.add('trade-locked');
+    lockMsg.style.display='';
+    // Reset generate code
     genBtn.disabled=true;
     genBtn.classList.remove('gen-ready');
     genBtn.textContent='Generate Code';
     document.getElementById('code-display').style.display='none';
     document.getElementById('my-code').textContent='—';
     MY_CODE='';
-    hint.style.display='';
   } else {
+    // Connect
     const a='0x'+Math.random().toString(16).slice(2,8).toUpperCase()+'...A7F2';
     btn.textContent=a;
     btn.style.background='rgba(16,185,129,.1)';
     btn.style.color='#10b981';
     btn.dataset.connected='1';
-    // Enable generate button on connect
+    // Unlock everything
+    tradeBody.classList.remove('trade-locked');
+    invWrap.classList.remove('trade-locked');
+    lockMsg.style.display='none';
+    // Enable generate code button
     genBtn.disabled=false;
     genBtn.classList.add('gen-ready');
-    hint.style.display='none';
   }
 }
 </script>
