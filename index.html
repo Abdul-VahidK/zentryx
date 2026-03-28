@@ -290,42 +290,203 @@ footer a:hover{color:var(--sky4);}
 </div>
 
 <script>
-const SUPABASE_URL='https://wbrspewpvzoziqfinpfd.supabase.co';
-const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndicnNwZXdwdnpvemlxZmlucGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNTQ2MjEsImV4cCI6MjA4OTgzMDYyMX0.j_MgjstUKK6K9DnCEcC4ilIocHY3VNCwMNiT47BrBUo';
-const STATE={connected:false,wallet:null};
-const WALLETS=[
-  {name:'Rabby Wallet',icon:'https://raw.githubusercontent.com/RabbyHub/Rabby/develop/src/assets/images/icon-128.png',detect:()=>!!(window.ethereum?.isRabby),install:'https://rabby.io'},
-  {name:'MetaMask',icon:'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg',detect:()=>!!(window.ethereum?.isMetaMask&&!window.ethereum?.isRabby),install:'https://metamask.io'},
-  {name:'Coinbase Wallet',icon:`data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230052ff'/><circle cx='50' cy='50' r='35' fill='white'/><circle cx='50' cy='50' r='22' fill='%230052ff'/></svg>`,detect:()=>!!(window.ethereum?.isCoinbaseWallet),install:'https://www.coinbase.com/wallet'},
-  {name:'Other EVM Wallet',icon:`data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23b8d8f0'/><text y='.9em' font-size='70' x='10'>🌐</text></svg>`,detect:()=>!!(window.ethereum),install:null}
+// ── CONFIG ────────────────────────────────────────────────
+const SUPABASE_URL = 'https://wbrspewpvzoziqfinpfd.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndicnNwZXdwdnpvemlxZmlucGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNTQ2MjEsImV4cCI6MjA4OTgzMDYyMX0.j_MgjstUKK6K9DnCEcC4ilIocHY3VNCwMNiT47BrBUo';
+
+// ── WALLET STATE ──────────────────────────────────────────
+const STATE = { connected: false, wallet: null };
+
+// ── WALLET OPTIONS ────────────────────────────────────────
+const WALLETS = [
+  {
+    name: 'Rabby Wallet',
+    icon: 'https://raw.githubusercontent.com/RabbyHub/Rabby/develop/src/assets/images/icon-128.png',
+    detect: () => !!(window.ethereum?.isRabby),
+    install: 'https://rabby.io'
+  },
+  {
+    name: 'MetaMask',
+    icon: 'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg',
+    detect: () => !!(window.ethereum?.isMetaMask && !window.ethereum?.isRabby),
+    install: 'https://metamask.io'
+  },
+  {
+    name: 'Coinbase Wallet',
+    icon: `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230052ff'/><circle cx='50' cy='50' r='35' fill='white'/><circle cx='50' cy='50' r='22' fill='%230052ff'/></svg>`,
+    detect: () => !!(window.ethereum?.isCoinbaseWallet),
+    install: 'https://www.coinbase.com/wallet'
+  },
+  {
+    name: 'Other EVM Wallet',
+    icon: `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23b8d8f0'/><text y='.9em' font-size='70' x='10'>🌐</text></svg>`,
+    detect: () => !!(window.ethereum),
+    install: null
+  }
 ];
-function openModal(){if(STATE.connected){disconnect();return;}buildList();document.getElementById('walletModal').classList.add('open');}
-function closeModal(){document.getElementById('walletModal').classList.remove('open');}
-function closeModalOuter(e){if(e.target.id==='walletModal')closeModal();}
-function buildList(){
-  const el=document.getElementById('walletList');el.innerHTML='';
-  WALLETS.forEach(w=>{
-    const f=w.detect();const d=document.createElement('div');d.className='wopt';
-    d.innerHTML=`<div class="wopt-l"><img src="${w.icon}" class="wopt-ic" style="background:#eaf4ff;border:1px solid #b8d8f0;padding:4px;" onerror="this.style.display='none'"/><div class="wopt-n">${w.name}</div></div><span class="wtag ${f?'y':'n'}">${f?'● Detected':w.install?'Not Installed':'Not Detected'}</span>`;
-    d.onclick=()=>{if(f)connect();else if(w.install)window.open(w.install,'_blank');else connect();};
-    el.appendChild(d);
+
+// ── STEP 1: User clicks "Connect Wallet" button ───────────
+// Opens the modal showing wallet options (Rabby, MetaMask...)
+// Does NOT auto-connect to anything
+function openModal() {
+  if (STATE.connected) {
+    // Already connected → clicking button disconnects
+    disconnect();
+    return;
+  }
+  buildWalletList();
+  document.getElementById('walletModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('walletModal').classList.remove('open');
+}
+
+function closeModalOuter(e) {
+  if (e.target.id === 'walletModal') closeModal();
+}
+
+// ── STEP 2: Build the list of wallets in the modal ────────
+function buildWalletList() {
+  const el = document.getElementById('walletList');
+  el.innerHTML = '';
+
+  WALLETS.forEach(w => {
+    const found = w.detect();
+    const div = document.createElement('div');
+    div.className = 'wopt';
+    div.innerHTML = `
+      <div class="wopt-l">
+        <img src="${w.icon}" class="wopt-ic"
+          style="background:#eaf4ff;border:1px solid #b8d8f0;padding:4px;border-radius:8px;"
+          onerror="this.style.display='none'"/>
+        <div>
+          <div class="wopt-n">${w.name}</div>
+          <div style="font-size:0.65rem;color:#7aaac8;margin-top:2px;">
+            ${found ? 'Detected — click to connect' : (w.install ? 'Not installed' : 'Not detected')}
+          </div>
+        </div>
+      </div>
+      <span class="wtag ${found ? 'y' : 'n'}">
+        ${found ? '● Ready' : (w.install ? 'Install' : '—')}
+      </span>`;
+
+    div.onclick = () => {
+      if (found) {
+        // ✅ Wallet is installed → trigger its popup
+        requestConnection();
+      } else if (w.install) {
+        // ❌ Not installed → open install page
+        window.open(w.install, '_blank');
+      }
+    };
+
+    el.appendChild(div);
   });
 }
-async function connect(){
-  if(!window.ethereum){alert('No wallet detected.');return;}
-  try{const a=await window.ethereum.request({method:'eth_requestAccounts'});STATE.wallet=a[0];STATE.connected=true;closeModal();onConnected();}catch(e){console.error(e);}
+
+// ── STEP 3: User clicks a wallet → their wallet popup appears
+function requestConnection() {
+  if (!window.ethereum) {
+    alert('No wallet found.\nPlease install MetaMask or Rabby Wallet first.');
+    return;
+  }
+
+  // eth_requestAccounts → this triggers your wallet's own popup
+  window.ethereum.request({ method: 'eth_requestAccounts' })
+    .then(accounts => {
+      if (accounts.length > 0) {
+        STATE.wallet    = accounts[0];
+        STATE.connected = true;
+        closeModal();
+        onConnected();
+      }
+    })
+    .catch(err => {
+      if (err.code === 4001) {
+        // User clicked "Reject" in their wallet — do nothing
+        console.log('User rejected connection.');
+      } else {
+        console.error('Connection error:', err);
+      }
+    });
 }
-function disconnect(){STATE.connected=false;STATE.wallet=null;const b=document.getElementById('walletBtn');b.textContent='Connect Wallet';b.classList.remove('connected');}
-function onConnected(){const b=document.getElementById('walletBtn');b.textContent=`${STATE.wallet.slice(0,6)}...${STATE.wallet.slice(-4)}`;b.classList.add('connected');loadStats();}
-function toggleNav(){document.getElementById('mobNav').classList.toggle('open');}
-async function loadStats(){
-  try{
-    const r=await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?order=total_xp.desc&limit=1000`,{headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
-    const d=await r.json();
-    if(d&&d.length>0){const el=document.getElementById('hPlayers');if(el)el.textContent=d.length>1000?(d.length/1000).toFixed(1)+'K':d.length+'+';}
-  }catch(e){}
+
+// ── STEP 4: After connected — update the button ───────────
+function onConnected() {
+  const btn = document.getElementById('walletBtn');
+  if (!btn) return;
+  // Show short version: 0x1234...abcd
+  btn.textContent = STATE.wallet.slice(0,6) + '...' + STATE.wallet.slice(-4);
+  btn.classList.add('connected');
+
+  // If user switches wallet inside their extension
+  if (window.ethereum) {
+    window.ethereum.on('accountsChanged', accounts => {
+      if (accounts.length === 0) {
+        disconnect();
+      } else {
+        STATE.wallet = accounts[0];
+        const b = document.getElementById('walletBtn');
+        if (b) b.textContent = accounts[0].slice(0,6) + '...' + accounts[0].slice(-4);
+      }
+    });
+  }
+
+  loadStats();
 }
-loadStats();
+
+// ── Disconnect ────────────────────────────────────────────
+function disconnect() {
+  STATE.connected = false;
+  STATE.wallet    = null;
+  const btn = document.getElementById('walletBtn');
+  if (btn) {
+    btn.textContent = 'Connect Wallet';
+    btn.classList.remove('connected');
+  }
+}
+
+// ── Mobile nav toggle ─────────────────────────────────────
+function toggleNav() {
+  const nav = document.getElementById('mobNav');
+  if (nav) nav.classList.toggle('open');
+}
+
+// ── Load stats from Supabase ──────────────────────────────
+async function loadStats() {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/leaderboard?order=total_xp.desc&limit=1000`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+    );
+    const data = await res.json();
+    if (data && data.length > 0) {
+      const el = document.getElementById('hPlayers');
+      if (el) el.textContent = data.length > 999 ? (data.length/1000).toFixed(1)+'K' : data.length+'+';
+    }
+  } catch(e) {}
+}
+
+// ── On page load: DO NOT auto-connect ────────────────────
+// Only silently check if the user already connected before
+// (uses eth_accounts which does NOT trigger any popup)
+window.addEventListener('load', () => {
+  if (window.ethereum) {
+    window.ethereum.request({ method: 'eth_accounts' })
+      .then(accounts => {
+        // Only restore if user already approved this site before
+        if (accounts && accounts.length > 0) {
+          STATE.wallet    = accounts[0];
+          STATE.connected = true;
+          onConnected();
+        }
+        // Otherwise → button stays as "Connect Wallet" — no auto popup
+      })
+      .catch(() => {});
+  }
+  loadStats();
+});
 </script>
 </body>
 </html>
