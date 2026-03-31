@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zentryx — Leaderboard</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='8' fill='%23000'/><text y='82' x='8' font-size='80' font-family='Arial' font-weight='900' fill='%2300eeff'>Z</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#dff0fa;--bg2:#cce8f7;--surface:#f5fbff;--surface2:#f0f8ff;--surface3:#e0f0fb;
+  --border:#b8d8f0;--border2:#90c4e8;--sky:#38bdf8;--sky2:#0ea5e9;--sky3:#0284c7;
+  --blue:#0055dd;--blue2:#1a77ff;--cyan:#06b6d4;--gold:#f59e0b;--gold2:#fbbf24;
+  --green:#10b981;--red:#ef4444;--text:#0f2a3f;--text2:#3a6080;--text3:#7aaac8;
+  --dark:#0f1e2e;--glow-sky:0 0 28px rgba(56,189,248,0.45);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+
+/* ── BG ── */
+.bg-fixed{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(56,189,248,0.12) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,0.12) 1px,transparent 1px);background-size:60px 60px;}
+.bg-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 30%,rgba(186,230,255,0.25) 100%);}
+.bg-glow-top{position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:900px;height:500px;background:radial-gradient(ellipse,rgba(56,189,248,0.25) 0%,rgba(56,189,248,0.08) 50%,transparent 70%);}
+
+/* ── HEADER ── */
+header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:64px;background:rgba(245,251,255,0.95);border-bottom:1px solid var(--border);box-shadow:0 2px 16px rgba(56,189,248,0.1);backdrop-filter:blur(20px);}
+header::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--sky),var(--sky2),transparent);opacity:0.8;}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+.logo-z{width:38px;height:38px;background:linear-gradient(135deg,#e0f4ff,#fff);border:1.5px solid var(--cyan);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:900;color:var(--cyan);box-shadow:0 0 16px rgba(0,238,255,0.3);flex-shrink:0;}
+.logo-text{display:flex;flex-direction:column;line-height:1;}
+.logo-name{font-family:'Sora',sans-serif;font-size:1.45rem;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--dark);}
+.logo-tag{font-family:'JetBrains Mono',monospace;font-size:0.5rem;letter-spacing:2px;color:var(--sky2);opacity:0.8;text-transform:uppercase;margin-top:2px;}
+.header-nav{display:flex;align-items:center;gap:2px;}
+.nav-link{padding:6px 14px;font-family:'Sora',sans-serif;font-size:0.9rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;color:var(--text2);border-radius:3px;transition:all 0.15s;}
+.nav-link:hover,.nav-link.active{color:var(--sky3);background:rgba(56,189,248,0.1);}
+.header-right{display:flex;align-items:center;gap:10px;}
+.chain-badge{display:flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid var(--border);border-radius:3px;background:rgba(56,189,248,0.08);font-family:'JetBrains Mono',monospace;font-size:0.58rem;letter-spacing:1px;color:var(--sky3);}
+.chain-dot{width:6px;height:6px;border-radius:50%;background:var(--sky2);box-shadow:0 0 6px var(--sky2);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.wallet-btn{display:flex;align-items:center;gap:7px;padding:8px 20px;background:linear-gradient(135deg,var(--sky2),var(--sky3));border:none;border-radius:6px;font-family:'Sora',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;cursor:pointer;transition:all 0.15s;}
+.wallet-btn:hover{transform:translateY(-1px);box-shadow:var(--glow-sky);}
+.wallet-btn.connected{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:var(--green);}
+.mobile-menu-btn{display:none;background:none;border:1px solid var(--border);border-radius:3px;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);flex-direction:column;gap:4px;}
+.mobile-menu-btn span{display:block;width:16px;height:1.5px;background:currentColor;}
+.mobile-nav{display:none;position:absolute;top:64px;left:0;right:0;z-index:9;background:rgba(245,251,255,0.98);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);padding:12px 0;}
+.mobile-nav.open{display:block;}
+.mobile-nav a{display:block;padding:10px 24px;font-family:'Sora',sans-serif;font-size:1rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;text-decoration:none;color:var(--text2);}
+.mobile-nav a:hover{color:var(--sky3);}
+
+/* ── PAGE WRAP ── */
+.page-wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 24px 80px;}
+
+/* ── HERO HEADER ── */
+.lb-hero{text-align:center;padding:52px 0 44px;}
+.lb-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:5px 16px;border:1px solid rgba(56,189,248,0.3);border-radius:20px;font-family:'JetBrains Mono',monospace;font-size:0.56rem;letter-spacing:3px;color:var(--sky3);text-transform:uppercase;margin-bottom:20px;background:rgba(56,189,248,0.08);}
+.eyebrow-dot{width:5px;height:5px;background:var(--sky2);border-radius:50%;box-shadow:0 0 8px var(--sky2);animation:pulse 1.5s infinite;}
+.lb-hero-title{font-family:'Sora',sans-serif;font-size:clamp(2.5rem,6vw,4rem);font-weight:900;color:var(--dark);margin-bottom:12px;letter-spacing:-0.5px;}
+.lb-hero-sub{font-size:0.92rem;color:var(--text2);line-height:1.6;}
+
+/* ── TOP 3 PODIUM ── */
+.podium{display:grid;grid-template-columns:1fr 1.12fr 1fr;gap:16px;margin-bottom:36px;align-items:end;}
+.podium-card{background:rgba(240,250,255,0.88);backdrop-filter:blur(20px);border:1px solid rgba(186,230,255,0.7);border-radius:18px;padding:28px 20px;text-align:center;position:relative;transition:transform 0.2s;}
+.podium-card:hover{transform:translateY(-4px);}
+.podium-card.rank-1{background:rgba(245,251,255,0.95);border-color:rgba(245,158,11,0.35);box-shadow:0 12px 48px rgba(245,158,11,0.12),0 2px 0 rgba(245,158,11,0.15);}
+.podium-card.rank-2{background:rgba(240,250,255,0.85);}
+.podium-card.rank-3{background:rgba(240,250,255,0.85);}
+
+/* Medal icons */
+.podium-medal{font-size:2.8rem;margin-bottom:10px;display:block;line-height:1;}
+.podium-wallet{font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text3);letter-spacing:1px;margin-bottom:14px;}
+.podium-xp{font-family:'Sora',sans-serif;font-size:2rem;font-weight:900;line-height:1;margin-bottom:4px;}
+.podium-card.rank-1 .podium-xp{color:var(--gold);font-size:2.4rem;}
+.podium-card.rank-2 .podium-xp{color:var(--text2);}
+.podium-card.rank-3 .podium-xp{color:#cd7f32;}
+.podium-xp-label{font-family:'JetBrains Mono',monospace;font-size:0.55rem;letter-spacing:2px;color:var(--text3);text-transform:uppercase;}
+
+/* Glowing top border on #1 */
+.podium-card.rank-1::before{content:'';position:absolute;top:-1px;left:15%;right:15%;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:1px;}
+
+/* ── FILTERS ── */
+.filters-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap;}
+.filter-group{display:flex;gap:0;border:1px solid var(--border);border-radius:30px;overflow:hidden;background:rgba(240,250,255,0.7);}
+.filter-btn{padding:8px 20px;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.82rem;font-weight:600;color:var(--text2);background:transparent;border:none;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.filter-btn.active{background:rgba(14,165,233,0.15);color:var(--sky3);font-weight:700;}
+.filter-btn:hover:not(.active){background:rgba(56,189,248,0.07);color:var(--text);}
+
+/* ── TABLE ── */
+.lb-table{background:rgba(245,251,255,0.95);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(56,189,248,0.08);}
+.lb-head{display:grid;grid-template-columns:80px 1fr 130px 100px 100px 110px;padding:12px 24px;background:linear-gradient(90deg,rgba(240,248,255,0.9),rgba(220,240,255,0.6));border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:0.56rem;letter-spacing:2.5px;color:var(--text3);text-transform:uppercase;}
+.lb-row{display:grid;grid-template-columns:80px 1fr 130px 100px 100px 110px;padding:14px 24px;border-bottom:1px solid rgba(184,216,240,0.4);align-items:center;transition:background 0.12s;}
+.lb-row:last-child{border-bottom:none;}
+.lb-row:hover{background:rgba(56,189,248,0.05);}
+.lb-row.me{background:rgba(14,165,233,0.06);border-color:rgba(14,165,233,0.15);}
+
+/* Rank cell */
+.lb-rank-cell{display:flex;align-items:center;justify-content:center;}
+.rank-medal{font-size:1.5rem;line-height:1;}
+.rank-num{font-family:'Sora',sans-serif;font-size:0.9rem;font-weight:700;color:var(--text3);}
+
+/* Address cell */
+.lb-addr{font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text2);display:flex;align-items:center;gap:8px;}
+.you-tag{font-size:0.52rem;background:rgba(14,165,233,0.12);border:1px solid rgba(14,165,233,0.3);color:var(--sky3);padding:1px 6px;border-radius:10px;letter-spacing:1px;}
+
+/* XP cell */
+.lb-xp-cell{font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;color:var(--gold);}
+.lb-row:nth-child(2) .lb-xp-cell{color:var(--gold);}
+.lb-row:nth-child(3) .lb-xp-cell{color:var(--gold);}
+.lb-row:nth-child(4) .lb-xp-cell{color:#cd7f32;}
+
+/* Games / Wins cells */
+.lb-cell{font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text2);}
+.lb-wins{font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--green);font-weight:600;}
+
+/* Chain pill */
+.chain-pill-row{display:flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:0.65rem;font-weight:600;}
+.chain-pip{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.chain-pip.base{background:var(--blue2);box-shadow:0 0 5px rgba(26,119,255,0.5);}
+.chain-pip.ink{background:var(--sky2);box-shadow:0 0 5px rgba(14,165,233,0.5);}
+.chain-lbl.base{color:var(--blue2);}
+.chain-lbl.ink{color:var(--sky2);}
+
+/* Empty state */
+.lb-empty{padding:48px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--text3);letter-spacing:1px;}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,30,50,0.55);backdrop-filter:blur(8px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:linear-gradient(160deg,#f0f9ff,#e0f2fe);border:1.5px solid rgba(56,189,248,0.3);border-radius:16px;width:380px;max-width:95vw;padding:32px 28px;transform:translateY(16px);transition:transform 0.25s cubic-bezier(.34,1.3,.64,1);position:relative;box-shadow:0 8px 48px rgba(56,189,248,0.18);}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-title{font-family:'Sora',sans-serif;font-size:1.15rem;font-weight:800;color:var(--dark);margin-bottom:4px;}
+.modal-sub{font-size:0.8rem;color:var(--text2);margin-bottom:20px;}
+.modal-close{position:absolute;top:14px;right:14px;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text2);line-height:1;padding:4px;}
+.wallet-opt{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1.5px solid rgba(56,189,248,0.2);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all 0.12s;background:rgba(255,255,255,0.7);}
+.wallet-opt:hover{border-color:rgba(56,189,248,0.55);background:rgba(255,255,255,0.95);box-shadow:0 2px 16px rgba(56,189,248,0.15);}
+.wallet-opt-left{display:flex;align-items:center;gap:12px;}
+.wallet-opt-icon{width:40px;height:40px;border-radius:10px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.wallet-opt-info{display:flex;flex-direction:column;gap:2px;}
+.wallet-opt-name{font-family:'Sora',sans-serif;font-size:0.92rem;font-weight:700;color:var(--dark);}
+.wallet-opt-status{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text3);}
+.wallet-opt-tag{font-family:'JetBrains Mono',monospace;font-size:0.56rem;padding:2px 7px;border-radius:4px;letter-spacing:1px;}
+.wallet-opt-tag.found{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:var(--green);}
+.wallet-opt-tag.none{background:rgba(120,170,200,0.1);border:1px solid var(--border2);color:var(--text3);}
+.modal-footer{margin-top:16px;padding-top:14px;border-top:1px solid rgba(56,189,248,0.15);font-size:0.72rem;color:var(--text2);text-align:center;line-height:1.5;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;right:28px;z-index:2000;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:14px 20px;display:flex;align-items:center;gap:12px;font-size:0.82rem;color:var(--text);transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.34,1.3,.64,1);max-width:320px;pointer-events:none;box-shadow:0 4px 20px rgba(56,189,248,0.12);}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-close{margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;font-size:1rem;padding:0 0 0 8px;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.ani{animation:fadeUp 0.4s ease forwards;opacity:0;}
+.d1{animation-delay:0.04s}.d2{animation-delay:0.14s}.d3{animation-delay:0.24s}
+
+@media(max-width:900px){
+  .podium{grid-template-columns:1fr;max-width:320px;margin:0 auto 28px;}
+  .lb-head,.lb-row{grid-template-columns:56px 1fr 100px 80px;}
+  .lb-head>*:nth-child(5),.lb-head>*:nth-child(6),
+  .lb-row>*:nth-child(5),.lb-row>*:nth-child(6){display:none;}
+  header{padding:0 16px;position:relative;}
+  .header-nav{display:none;}
+  .mobile-menu-btn{display:flex;}
+  .chain-badge{display:none;}
+}
+@media(max-width:600px){
+  .lb-head,.lb-row{grid-template-columns:48px 1fr 90px;}
+  .lb-head>*:nth-child(4),.lb-row>*:nth-child(4){display:none;}
+}
+</style>
+</head>
+<body>
+<div class="bg-fixed">
+  <div class="bg-grid"></div>
+  <div class="bg-vignette"></div>
+  <div class="bg-glow-top"></div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <a class="logo" href="index.html">
+    <div class="logo-z">Z</div>
+    <div class="logo-text">
+      <div class="logo-name">Zentryx</div>
+      <div class="logo-tag">Web3 Platform</div>
+    </div>
+  </a>
+  <nav class="header-nav">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="chains.html">Games</a>
+    <a class="nav-link" href="swap.html">NFT P2P</a>
+    <a class="nav-link active" href="leaderboard.html">Leaderboard</a>
+    <a class="nav-link" href="rewards.html">Rewards</a>
+    <a class="nav-link" href="about.html">About</a>
+  </nav>
+  <div class="header-right">
+    <div class="chain-badge"><div class="chain-dot"></div>Base Network</div>
+    <button class="wallet-btn" id="walletBtn" onclick="openWalletModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" fill="currentColor"/><path d="M22 11V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2"/></svg>
+      Connect Wallet
+    </button>
+    <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileNav()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+<nav class="mobile-nav" id="mobileNav">
+  <a href="index.html" onclick="toggleMobileNav()">Home</a>
+  <a href="chains.html" onclick="toggleMobileNav()">Games</a>
+  <a href="swap.html" onclick="toggleMobileNav()">NFT P2P</a>
+  <a href="leaderboard.html" onclick="toggleMobileNav()">Leaderboard</a>
+  <a href="rewards.html" onclick="toggleMobileNav()">Rewards</a>
+  <a href="about.html" onclick="toggleMobileNav()">About</a>
+</nav>
+
+<div class="page-wrap">
+
+  <!-- ── HERO HEADER ── -->
+  <div class="lb-hero ani d1">
+    <div class="lb-eyebrow"><div class="eyebrow-dot"></div>GLOBAL RANKINGS</div>
+    <h1 class="lb-hero-title">Leaderboard</h1>
+    <p class="lb-hero-sub">Top players ranked by XP earned across all on-chain games.</p>
+  </div>
+
+  <!-- ── TOP 3 PODIUM ── -->
+  <div class="podium ani d2" id="podium">
+    <!-- 2nd place -->
+    <div class="podium-card rank-2" id="pod2">
+      <span class="podium-medal">🥈</span>
+      <div class="podium-wallet" id="pod2-wallet">—</div>
+      <div class="podium-xp" id="pod2-xp">—</div>
+      <div class="podium-xp-label">XP</div>
+    </div>
+    <!-- 1st place (center, taller) -->
+    <div class="podium-card rank-1" id="pod1">
+      <span class="podium-medal">🥇</span>
+      <div class="podium-wallet" id="pod1-wallet">—</div>
+      <div class="podium-xp" id="pod1-xp">—</div>
+      <div class="podium-xp-label">XP</div>
+    </div>
+    <!-- 3rd place -->
+    <div class="podium-card rank-3" id="pod3">
+      <span class="podium-medal">🥉</span>
+      <div class="podium-wallet" id="pod3-wallet">—</div>
+      <div class="podium-xp" id="pod3-xp">—</div>
+      <div class="podium-xp-label">XP</div>
+    </div>
+  </div>
+
+  <!-- ── FILTERS ── -->
+  <div class="filters-row ani d3">
+    <div class="filter-group" id="chainFilters">
+      <button class="filter-btn active" onclick="setChain('all',this)">All Chains</button>
+      <button class="filter-btn" onclick="setChain('base',this)">Base</button>
+      <button class="filter-btn" onclick="setChain('ink',this)">Ink</button>
+    </div>
+    <div class="filter-group" id="timeFilters">
+      <button class="filter-btn active" onclick="setTime('all',this)">All Time</button>
+      <button class="filter-btn" onclick="setTime('week',this)">This Week</button>
+      <button class="filter-btn" onclick="setTime('today',this)">Today</button>
+    </div>
+  </div>
+
+  <!-- ── TABLE ── -->
+  <div class="lb-table ani d3">
+    <div class="lb-head">
+      <div>RANK</div>
+      <div>ADDRESS</div>
+      <div>XP</div>
+      <div>GAMES</div>
+      <div>WINS</div>
+      <div>CHAIN</div>
+    </div>
+    <div id="lbBody"><div class="lb-empty">Loading leaderboard…</div></div>
+  </div>
+
+</div><!-- .page-wrap -->
+
+<!-- WALLET MODAL -->
+<div class="modal-overlay" id="walletModal" onclick="closeModalOuter(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Connect Wallet</div>
+    <div class="modal-sub">Choose a wallet to connect to Zentryx</div>
+    <div id="walletList"></div>
+    <div class="modal-footer">By connecting, you agree to our terms.<br>Your wallet is never stored without permission.</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toastIcon">📢</span>
+  <span id="toastMsg"></span>
+  <button class="toast-close" onclick="hideToast()">✕</button>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://wbrspewpvzoziqfinpfd.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndicnNwZXdwdnpvemlxZmlucGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNTQ2MjEsImV4cCI6MjA4OTgzMDYyMX0.j_MgjstUKK6K9DnCEcC4ilIocHY3VNCwMNiT47BrBUo';
+const LEVELS = [0,200,500,1000,2000,4000,8000,15000,28000,50000,90000,150000,250000,400000,650000];
+const STATE = { connected:false, wallet:null, xp:0, chainFilter:'all', timeFilter:'all' };
+
+// ── MOCK DATA for demo when Supabase returns empty ──────────
+// Remove this and use real data once DB is populated
+const MOCK_DATA = [
+  { wallet:'0x7f3a...B2C9', total_xp:48200, games_played:234, wins:189, chain:'base' },
+  { wallet:'0xAb12...F4D1', total_xp:41750, games_played:198, wins:156, chain:'ink'  },
+  { wallet:'0x3E9c...77A0', total_xp:38900, games_played:176, wins:132, chain:'base' },
+  { wallet:'0xD4f8...2C31', total_xp:31200, games_played:145, wins:98,  chain:'base' },
+  { wallet:'0x9B3e...A8F2', total_xp:27600, games_played:122, wins:87,  chain:'ink'  },
+  { wallet:'0x1Ca7...55E9', total_xp:22100, games_played:109, wins:71,  chain:'base' },
+  { wallet:'0x8Fb2...D340', total_xp:18750, games_played:93,  wins:58,  chain:'ink'  },
+  { wallet:'0x4d61...09C8', total_xp:14300, games_played:78,  wins:44,  chain:'base' },
+  { wallet:'0xE72a...B1F6', total_xp:9800,  games_played:61,  wins:31,  chain:'ink'  },
+  { wallet:'0x2fC5...3A77', total_xp:6500,  games_played:44,  wins:19,  chain:'base' },
+];
+
+// ── WALLETS ──────────────────────────────────────────────────
+const WALLETS = [
+  { name:'Rabby Wallet',    detect:()=>!!(window.ethereum?.isRabby),                                                               install:'https://rabby.io',
+    icon:`<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#8697FF"/><path d="M10 26c0-5.523 4.477-10 10-10h4c2.761 0 5 2.239 5 5s-2.239 5-5 5H10z" fill="white"/><path d="M10 26c0-2.761 2.239-5 5-5h9l-4 5H10z" fill="#C4CBFF"/><circle cx="26" cy="17" r="4" fill="white"/></svg>` },
+  { name:'MetaMask',        detect:()=>!!(window.ethereum?.isMetaMask&&!window.ethereum?.isRabby),                                  install:'https://metamask.io/download/',
+    icon:`<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#F6851B"/><path d="M31 9l-8.5 6.3 1.6-3.8L31 9z" fill="#E2761B"/><path d="M9 9l8.4 6.4-1.5-3.9L9 9z" fill="#E4761B"/><path d="M28.2 25.6l-2.3 3.5 4.9 1.3 1.4-4.7-4-.1z" fill="#E4761B"/><path d="M8.4 25.7l1.4 4.7 4.9-1.3-2.3-3.5-4 .1z" fill="#E4761B"/><path d="M14.4 19.2l-1.3 2 4.7.2-.2-5-3.2 2.8z" fill="#E4761B"/><path d="M25.6 19.2l-3.3-2.9-.1 5.1 4.7-.2-1.3-2z" fill="#E4761B"/><path d="M14.7 29.1l2.8-1.4-2.4-1.9-.4 3.3z" fill="#E4761B"/><path d="M22.5 27.7l2.8 1.4-.4-3.3-2.4 1.9z" fill="#E4761B"/></svg>` },
+  { name:'Phantom',         detect:()=>!!(window.phantom?.ethereum),                                                               install:'https://phantom.app/download',
+    icon:`<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#AB9FF2"/><path d="M20 8c-6.627 0-12 5.373-12 12 0 3.866 1.828 7.31 4.672 9.54.322.253.743-.044.676-.445A9.98 9.98 0 0113 27c0-5.523 4.477-10 10-10 1.72 0 3.337.436 4.74 1.202.297.163.65-.063.6-.4A12.015 12.015 0 0020 8z" fill="white"/><path d="M25 19c-3.314 0-6 2.686-6 6s2.686 6 6 6 6-2.686 6-6-2.686-6-6-6zm-1.5 6.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm3 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" fill="white"/></svg>` },
+  { name:'Coinbase Wallet', detect:()=>!!(window.ethereum?.isCoinbaseWallet),                                                      install:'https://www.coinbase.com/wallet/downloads',
+    icon:`<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#1652F0"/><circle cx="20" cy="20" r="10" fill="white"/><path d="M20 13c-3.866 0-7 3.134-7 7s3.134 7 7 7 7-3.134 7-7-3.134-7-7-7zm-2.5 9.5v-5h5v5h-5z" fill="#1652F0"/></svg>` },
+  { name:'Other EVM Wallet',detect:()=>!!(window.ethereum)&&!window.ethereum?.isRabby&&!window.ethereum?.isMetaMask&&!window.ethereum?.isCoinbaseWallet, install:'https://ethereum.org/en/wallets/find-wallet/',
+    icon:`<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#627EEA"/><path d="M20 8v8.87l7.5 3.35L20 8z" fill="white" opacity=".6"/><path d="M20 8L12.5 20.22l7.5-3.35V8z" fill="white"/><path d="M20 27.18v4.82l7.5-10.38L20 27.18z" fill="white" opacity=".6"/><path d="M20 32v-4.82l-7.5-5.56L20 32z" fill="white"/></svg>` },
+];
+
+function openWalletModal() {
+  if (STATE.connected) { disconnectWallet(); return; }
+  buildWalletList();
+  document.getElementById('walletModal').classList.add('open');
+}
+function closeModal() { document.getElementById('walletModal').classList.remove('open'); }
+function closeModalOuter(e) { if(e.target.id==='walletModal') closeModal(); }
+
+function buildWalletList() {
+  const el = document.getElementById('walletList'); el.innerHTML = '';
+  WALLETS.forEach(w => {
+    const found = w.detect();
+    const div = document.createElement('div'); div.className = 'wallet-opt';
+    div.innerHTML = `
+      <div class="wallet-opt-left">
+        <div class="wallet-opt-icon">${w.icon}</div>
+        <div class="wallet-opt-info">
+          <div class="wallet-opt-name">${w.name}</div>
+          <div class="wallet-opt-status" style="color:${found?'var(--sky3)':'var(--text3)'};">${found?'● Detected · Ready to connect':w.install?'Not installed · Click to install':'Not detected'}</div>
+        </div>
+      </div>
+      <span class="wallet-opt-tag ${found?'found':'none'}">${found?'● Live':w.install?'Install':''}</span>`;
+    div.onclick = () => { if(found) connectWallet(w.name); else if(w.install) window.open(w.install,'_blank'); else connectWallet(w.name); };
+    el.appendChild(div);
+  });
+}
+
+async function connectWallet(walletName) {
+  let provider = window.ethereum;
+  if (walletName === 'Phantom' && window.phantom?.ethereum) provider = window.phantom.ethereum;
+  if (!provider) { showToast('No wallet detected. Install MetaMask or Rabby.','⚠️'); return; }
+  try {
+    const accounts = await provider.request({ method:'eth_requestAccounts' });
+    STATE.wallet = accounts[0]; STATE.connected = true;
+    closeModal(); onConnected();
+  } catch(e) { console.error(e); }
+}
+
+function disconnectWallet() {
+  STATE.connected=false; STATE.wallet=null; STATE.xp=0;
+  const btn = document.getElementById('walletBtn');
+  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" fill="currentColor"/><path d="M22 11V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2"/></svg> Connect Wallet`;
+  btn.classList.remove('connected');
+}
+
+async function onConnected() {
+  const btn = document.getElementById('walletBtn');
+  btn.innerHTML = `<div style="width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 6px #10b981;flex-shrink:0;"></div> ${STATE.wallet.slice(0,6)}...${STATE.wallet.slice(-4)}`;
+  btn.classList.add('connected');
+  renderLeaderboard();
+}
+
+// ── FILTERS ──────────────────────────────────────────────────
+function setChain(chain, btn) {
+  STATE.chainFilter = chain;
+  document.querySelectorAll('#chainFilters .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLeaderboard();
+}
+function setTime(time, btn) {
+  STATE.timeFilter = time;
+  document.querySelectorAll('#timeFilters .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLeaderboard();
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+async function renderLeaderboard() {
+  const body = document.getElementById('lbBody');
+  body.innerHTML = '<div class="lb-empty">Loading…</div>';
+
+  let data;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?order=total_xp.desc&limit=20`, {
+      headers:{ 'apikey':SUPABASE_KEY, 'Authorization':`Bearer ${SUPABASE_KEY}` }
+    });
+    data = await res.json();
+    // Fall back to mock data if empty
+    if (!data || !data.length) data = MOCK_DATA;
+  } catch(e) {
+    data = MOCK_DATA;
+  }
+
+  // Apply chain filter (mock adds chain field; real data uses games_played for chain guess)
+  let filtered = data;
+  if (STATE.chainFilter !== 'all') {
+    filtered = data.filter(p => (p.chain || 'base') === STATE.chainFilter);
+  }
+
+  // Fill podium (always use unfiltered top 3 for visual impact)
+  const top3 = data.slice(0, 3);
+  const podSlots = [
+    { id:'pod1', idx:0 },  // 1st — center
+    { id:'pod2', idx:1 },  // 2nd — left
+    { id:'pod3', idx:2 },  // 3rd — right
+  ];
+  podSlots.forEach(({ id, idx }) => {
+    const p = top3[idx];
+    if (p) {
+      document.getElementById(id+'-wallet').textContent = p.wallet;
+      document.getElementById(id+'-xp').textContent = (p.total_xp||0).toLocaleString();
+    }
+  });
+
+  if (!filtered.length) {
+    body.innerHTML = '<div class="lb-empty">No players on this chain yet.</div>';
+    return;
+  }
+
+  const myShort = STATE.wallet ? STATE.wallet.slice(0,6)+'...'+STATE.wallet.slice(-4) : null;
+  const medals = ['🥇','🥈','🥉'];
+
+  body.innerHTML = filtered.map((p, i) => {
+    const isMe = p.wallet === myShort;
+    const chain = p.chain || (i % 2 === 0 ? 'base' : 'ink'); // fallback for real data
+    const wins = p.wins ?? Math.round((p.games_played || 0) * 0.65);
+    const rankCell = i < 3
+      ? `<div class="lb-rank-cell"><span class="rank-medal">${medals[i]}</span></div>`
+      : `<div class="lb-rank-cell"><span class="rank-num">${i+1}</span></div>`;
+    const xpColor = i === 0 ? 'var(--gold)' : i === 1 ? 'var(--gold)' : i === 2 ? '#cd7f32' : 'var(--sky3)';
+
+    return `<div class="lb-row${isMe?' me':''}">
+      ${rankCell}
+      <div class="lb-addr">${p.wallet}${isMe?'<span class="you-tag">YOU</span>':''}</div>
+      <div class="lb-xp-cell" style="color:${xpColor}">${(p.total_xp||0).toLocaleString()}</div>
+      <div class="lb-cell">${p.games_played||0}</div>
+      <div class="lb-wins">${wins}</div>
+      <div class="chain-pill-row">
+        <div class="chain-pip ${chain}"></div>
+        <span class="chain-lbl ${chain}">${chain.charAt(0).toUpperCase()+chain.slice(1)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleMobileNav() { document.getElementById('mobileNav').classList.toggle('open'); }
+
+let toastTimer;
+function showToast(msg, icon='📢') {
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastIcon').textContent = icon;
+  document.getElementById('toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, 4000);
+}
+function hideToast() { document.getElementById('toast').classList.remove('show'); }
+
+renderLeaderboard();
+</script>
+</body>
+</html>
