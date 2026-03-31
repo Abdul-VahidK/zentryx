@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zentryx — Home</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='8' fill='%23000'/><text y='82' x='8' font-size='80' font-family='Arial' font-weight='900' fill='%2300eeff'>Z</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#dff0fa;--bg2:#cce8f7;--surface:#f5fbff;--surface2:#f0f8ff;--surface3:#e0f0fb;
+  --border:#b8d8f0;--border2:#90c4e8;--sky:#38bdf8;--sky2:#0ea5e9;--sky3:#0284c7;
+  --blue:#0055dd;--blue2:#1a77ff;--cyan:#06b6d4;--cyan2:#0891b2;
+  --gold:#f59e0b;--gold2:#fbbf24;--green:#10b981;--red:#ef4444;
+  --text:#0f2a3f;--text2:#3a6080;--text3:#7aaac8;--white:#f0f9ff;--dark:#0f1e2e;
+  --glow-sky:0 0 28px rgba(56,189,248,0.45);--glow-blue:0 0 28px rgba(0,85,221,0.35);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+
+/* ── BG ── */
+.bg-fixed{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(56,189,248,0.12) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,0.12) 1px,transparent 1px);background-size:60px 60px;}
+.bg-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 30%,rgba(186,230,255,0.25) 100%);}
+.bg-glow-top{position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:900px;height:500px;background:radial-gradient(ellipse,rgba(56,189,248,0.3) 0%,rgba(56,189,248,0.1) 50%,transparent 70%);}
+
+/* ── HEADER ── */
+header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:64px;background:rgba(245,251,255,0.95);border-bottom:1px solid var(--border);box-shadow:0 2px 16px rgba(56,189,248,0.1);backdrop-filter:blur(20px);}
+header::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--sky),var(--sky2),transparent);opacity:0.8;}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+.logo-z{width:38px;height:38px;background:linear-gradient(135deg,#e0f4ff,#fff);border:1.5px solid var(--cyan);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:900;color:var(--cyan);box-shadow:0 0 16px rgba(0,238,255,0.3);flex-shrink:0;}
+.logo-text{display:flex;flex-direction:column;line-height:1;}
+.logo-name{font-family:'Sora',sans-serif;font-size:1.45rem;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--dark);}
+.logo-tag{font-family:'JetBrains Mono',monospace;font-size:0.5rem;letter-spacing:2px;color:var(--sky2);opacity:0.8;text-transform:uppercase;margin-top:2px;}
+.header-nav{display:flex;align-items:center;gap:2px;}
+.nav-link{padding:6px 14px;font-family:'Sora',sans-serif;font-size:0.9rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;color:var(--text2);border-radius:3px;transition:all 0.15s;}
+.nav-link:hover,.nav-link.active{color:var(--sky3);background:rgba(56,189,248,0.1);}
+.header-right{display:flex;align-items:center;gap:10px;}
+.chain-badge{display:flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid var(--border);border-radius:3px;background:rgba(56,189,248,0.08);font-family:'JetBrains Mono',monospace;font-size:0.58rem;letter-spacing:1px;color:var(--sky3);}
+.chain-dot{width:6px;height:6px;border-radius:50%;background:var(--sky2);box-shadow:0 0 6px var(--sky2);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.wallet-btn{display:flex;align-items:center;gap:7px;padding:8px 20px;background:linear-gradient(135deg,var(--sky2),var(--sky3));border:none;border-radius:6px;font-family:'Sora',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;cursor:pointer;transition:all 0.15s;}
+.wallet-btn:hover{transform:translateY(-1px);box-shadow:var(--glow-sky);}
+.wallet-btn.connected{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:var(--green);}
+.mobile-menu-btn{display:none;background:none;border:1px solid var(--border);border-radius:3px;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);flex-direction:column;gap:4px;}
+.mobile-menu-btn span{display:block;width:16px;height:1.5px;background:currentColor;transition:all 0.2s;}
+.mobile-nav{display:none;position:absolute;top:64px;left:0;right:0;z-index:9;background:rgba(245,251,255,0.98);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);padding:12px 0;}
+.mobile-nav.open{display:block;}
+.mobile-nav a{display:block;padding:10px 24px;font-family:'Sora',sans-serif;font-size:1rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;text-decoration:none;color:var(--text2);transition:color 0.15s;}
+.mobile-nav a:hover{color:var(--sky3);}
+
+/* ── HERO ── */
+.hero{position:relative;z-index:1;overflow:hidden;display:flex;flex-direction:column;align-items:center;padding-bottom:60px;}
+
+/* Giant ghost ZENTRYX letters */
+.hero-wordmark{
+  position:relative;z-index:1;
+  font-family:'Sora',sans-serif;
+  font-size:clamp(5rem,14vw,13rem);
+  font-weight:900;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  color:transparent;
+  -webkit-text-stroke:1.5px rgba(56,189,248,0.28);
+  text-stroke:1.5px rgba(56,189,248,0.28);
+  line-height:1;
+  padding-top:48px;
+  margin-bottom:0;
+  pointer-events:none;
+  user-select:none;
+}
+
+/* Glass card overlapping the wordmark */
+.hero-glass{
+  position:relative;z-index:2;
+  background:rgba(240,250,255,0.88);
+  backdrop-filter:blur(28px);
+  -webkit-backdrop-filter:blur(28px);
+  border:1px solid rgba(186,230,255,0.75);
+  border-radius:20px;
+  padding:36px 60px 40px;
+  max-width:700px;width:90%;
+  box-shadow:0 8px 48px rgba(56,189,248,0.16),0 1px 0 rgba(255,255,255,0.8);
+  margin-top:-80px;
+  text-align:center;
+}
+.hero-glass::before{content:'';position:absolute;top:-1px;left:12%;right:12%;height:1px;background:linear-gradient(90deg,transparent,var(--sky),var(--sky2),transparent);}
+
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:5px 16px;border:1px solid rgba(56,189,248,0.3);border-radius:20px;font-family:'JetBrains Mono',monospace;font-size:0.56rem;letter-spacing:3px;color:var(--sky3);text-transform:uppercase;margin-bottom:22px;background:rgba(56,189,248,0.08);}
+.eyebrow-dot{width:5px;height:5px;background:var(--sky2);border-radius:50%;box-shadow:0 0 8px var(--sky2);animation:pulse 1.5s infinite;}
+
+.hero-headline{font-family:'Sora',sans-serif;font-size:clamp(1.4rem,3.5vw,2rem);font-weight:900;letter-spacing:5px;text-transform:uppercase;color:var(--dark);margin-bottom:16px;line-height:1.15;}
+.hero-headline span{color:var(--sky3);}
+
+.hero-desc{font-size:0.92rem;color:var(--text2);line-height:1.7;margin-bottom:32px;max-width:520px;margin-left:auto;margin-right:auto;}
+.hero-desc a{color:var(--sky2);font-weight:700;text-decoration:none;}
+.hero-desc a:hover{text-decoration:underline;}
+
+/* Stats row */
+.hero-stats{display:inline-flex;border:1px solid rgba(56,189,248,0.22);border-radius:10px;overflow:hidden;background:rgba(215,240,255,0.65);}
+.hstat{padding:12px 28px;border-right:1px solid rgba(56,189,248,0.18);text-align:center;}
+.hstat:last-child{border-right:none;}
+.hstat-val{font-family:'Sora',sans-serif;font-size:1.6rem;font-weight:800;color:var(--sky3);letter-spacing:1px;}
+.hstat-label{font-family:'JetBrains Mono',monospace;font-size:0.5rem;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-top:3px;}
+
+/* ── SECTION LABEL ── */
+.section-divider{position:relative;z-index:1;text-align:center;padding:52px 0 36px;font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:3px;color:var(--text3);text-transform:uppercase;}
+
+/* ── FEATURE CARDS ── */
+.features{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 24px 72px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.feat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:36px 32px 32px;transition:all 0.2s;position:relative;overflow:hidden;}
+.feat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;opacity:0;transition:opacity 0.2s;}
+.feat-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(56,189,248,0.15);border-color:var(--border2);}
+.feat-card:hover::after{opacity:1;}
+.feat-card.fc-games::after{background:linear-gradient(90deg,transparent,var(--blue2),transparent);}
+.feat-card.fc-wallet::after{background:linear-gradient(90deg,transparent,var(--sky2),transparent);}
+.feat-card.fc-swap::after{background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.feat-icon{font-size:2.4rem;margin-bottom:20px;display:block;}
+.feat-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.25rem;font-weight:800;color:var(--dark);margin-bottom:12px;}
+.feat-desc{font-size:0.87rem;color:var(--text2);line-height:1.65;margin-bottom:28px;}
+.feat-btn{display:inline-flex;align-items:center;gap:8px;padding:11px 24px;background:linear-gradient(135deg,var(--sky2),var(--sky3));border:none;border-radius:8px;font-family:'Sora',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;cursor:pointer;text-decoration:none;transition:all 0.15s;}
+.feat-btn:hover{transform:translateY(-1px);box-shadow:var(--glow-sky);}
+.feat-btn-arrow{transition:transform 0.15s;}
+.feat-btn:hover .feat-btn-arrow{transform:translateX(3px);}
+
+/* ── MORE SECTIONS ── */
+.section{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 24px 72px;}
+.section-header{display:flex;align-items:center;gap:14px;margin-bottom:28px;}
+.section-line{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+.section-label{font-family:'JetBrains Mono',monospace;font-size:0.58rem;letter-spacing:3px;color:var(--text2);text-transform:uppercase;white-space:nowrap;}
+.section-num{font-family:'Sora',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:2px;color:var(--sky2);}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:0 0 60px;position:relative;z-index:1;}
+
+/* Games grid */
+.games-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+.game-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 20px;position:relative;overflow:hidden;transition:all 0.2s;}
+.game-card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 8px 32px rgba(56,189,248,0.14);}
+.game-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity 0.2s;}
+.game-card:hover::after{opacity:1;}
+.game-card.gbase::after{background:linear-gradient(90deg,transparent,var(--blue2),transparent);}
+.game-card.gink::after{background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.game-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.game-icon-big{font-size:2rem;}
+.game-status-tag{font-family:'JetBrains Mono',monospace;font-size:0.52rem;padding:3px 8px;border-radius:4px;letter-spacing:1px;}
+.gst-live{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:var(--green);}
+.gst-soon{background:rgba(120,170,200,0.15);border:1px solid var(--border2);color:var(--text3);}
+.game-name{font-family:'Sora',sans-serif;font-size:1.15rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--dark);margin-bottom:4px;}
+.game-chain-label{font-family:'JetBrains Mono',monospace;font-size:0.55rem;letter-spacing:1.5px;color:var(--text3);margin-bottom:10px;}
+.game-desc{font-size:0.76rem;color:var(--text2);line-height:1.5;margin-bottom:16px;}
+.game-xp-row{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:12px;}
+.game-xp-label{font-family:'JetBrains Mono',monospace;font-size:0.55rem;letter-spacing:1px;color:var(--text3);}
+.game-xp-val{font-family:'Sora',sans-serif;font-size:0.95rem;font-weight:800;color:var(--gold);}
+.game-play-btn{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);font-family:'Sora',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text2);background:transparent;cursor:pointer;transition:all 0.15s;}
+.game-play-btn.glive{border-color:rgba(0,102,255,0.4);color:var(--blue2);background:rgba(0,102,255,0.07);}
+.game-play-btn.glive:hover{background:rgba(0,102,255,0.14);box-shadow:var(--glow-blue);}
+.game-play-btn.gsoon{opacity:0.5;cursor:default;}
+
+/* Leaderboard */
+.lb-grid{display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start;}
+.lb-table{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.lb-head{display:grid;grid-template-columns:48px 1fr 110px 80px 80px;padding:10px 20px;background:linear-gradient(90deg,var(--surface2),var(--bg2));border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:0.53rem;letter-spacing:2px;color:var(--text3);text-transform:uppercase;}
+.lb-row{display:grid;grid-template-columns:48px 1fr 110px 80px 80px;padding:11px 20px;border-bottom:1px solid var(--border);align-items:center;transition:background 0.12s;}
+.lb-row:last-child{border-bottom:none;}
+.lb-row:hover{background:var(--surface2);}
+.lb-row.me{background:rgba(14,165,233,0.05);border-color:rgba(14,165,233,0.12);}
+.lb-rank{font-family:'Sora',sans-serif;font-size:1.1rem;font-weight:800;text-align:center;}
+.lb-rank.r1{color:var(--gold);}
+.lb-rank.r2{color:#b0bec8;}
+.lb-rank.r3{color:#cd7f32;}
+.lb-rank.rn{color:var(--text3);font-size:0.85rem;}
+.lb-wallet{font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--text2);}
+.you-tag{font-size:0.52rem;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);color:var(--sky3);padding:1px 5px;border-radius:2px;margin-left:5px;letter-spacing:1px;}
+.lb-xp{font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;color:var(--sky3);}
+.lb-chain{font-family:'JetBrains Mono',monospace;font-size:0.58rem;letter-spacing:1px;color:var(--text3);}
+.lb-games{font-family:'JetBrains Mono',monospace;font-size:0.63rem;color:var(--text2);}
+.lb-empty{padding:40px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.63rem;color:var(--text3);letter-spacing:1px;}
+.lb-sidebar{display:flex;flex-direction:column;gap:12px;}
+.lb-side-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.lsc-title{font-family:'JetBrains Mono',monospace;font-size:0.55rem;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.my-xp-big{font-family:'Sora',sans-serif;font-size:3rem;font-weight:900;color:var(--sky3);text-align:center;line-height:1;margin-bottom:4px;}
+.my-xp-label{font-family:'JetBrains Mono',monospace;font-size:0.52rem;letter-spacing:3px;color:var(--text3);text-transform:uppercase;text-align:center;}
+.xp-bar-wrap{margin-top:14px;}
+.xp-bar-labels{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:0.52rem;color:var(--text3);margin-bottom:5px;}
+.xp-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.xp-bar-fill{height:100%;background:linear-gradient(90deg,var(--sky),var(--sky2));border-radius:2px;transition:width 1s ease;}
+.tier-list{display:flex;flex-direction:column;gap:6px;}
+.tier-item{display:flex;align-items:center;justify-content:space-between;padding:8px 11px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);transition:all 0.15s;}
+.tier-item.unlocked{border-color:rgba(14,165,233,0.25);background:rgba(14,165,233,0.04);}
+.tier-left{display:flex;align-items:center;gap:8px;}
+.tier-icon{font-size:0.9rem;}
+.tier-name{font-size:0.78rem;font-weight:600;color:var(--text);}
+.tier-xp{font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--text3);}
+.tier-check{font-size:0.7rem;color:var(--green);}
+
+/* Social / Follow section */
+.social-section{position:relative;z-index:1;padding:0 24px 72px;display:flex;flex-direction:column;align-items:center;gap:16px;}
+.social-section-label{font-family:'JetBrains Mono',monospace;font-size:0.58rem;letter-spacing:3px;color:var(--text3);text-transform:uppercase;margin-bottom:4px;}
+.social-cards{display:flex;align-items:stretch;gap:16px;flex-wrap:wrap;justify-content:center;}
+.social-card{display:flex;flex-direction:column;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 32px 20px;min-width:160px;transition:all 0.18s;position:relative;overflow:hidden;}
+.social-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;opacity:0;transition:opacity 0.18s;}
+.social-card.x-card::after{background:linear-gradient(90deg,transparent,#1d9bf0,transparent);}
+.social-card.discord-card::after{background:linear-gradient(90deg,transparent,#5865f2,transparent);}
+.social-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(56,189,248,0.15);}
+.social-card:hover::after{opacity:1;}
+.social-avatar{width:64px;height:64px;border-radius:50%;object-fit:cover;display:block;margin-bottom:12px;border:2px solid var(--border2);}
+.social-avatar.discord-av{background:linear-gradient(135deg,#5865f2,#7289da);display:flex;align-items:center;justify-content:center;font-size:1.8rem;}
+.social-card-name{font-family:'Sora',sans-serif;font-size:1rem;font-weight:800;letter-spacing:1px;color:var(--dark);margin-bottom:2px;}
+.social-card-handle{font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--text2);margin-bottom:16px;}
+.social-card-btn{display:flex;align-items:center;gap:7px;padding:8px 20px;border-radius:20px;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.78rem;font-weight:700;text-decoration:none;transition:all 0.15s;white-space:nowrap;border:1px solid;}
+.x-card .social-card-btn{background:var(--dark);border-color:rgba(255,255,255,0.15);color:#fff;}
+.x-card .social-card-btn:hover{background:#111;}
+.discord-card .social-card-btn{background:rgba(88,101,242,0.12);border-color:rgba(88,101,242,0.4);color:#7289da;}
+.discord-card .social-card-btn:hover{background:rgba(88,101,242,0.22);}
+
+/* Footer */
+footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:22px 32px;display:flex;align-items:center;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--text2);letter-spacing:1px;background:rgba(220,244,255,0.6);}
+footer a{color:var(--sky3);text-decoration:none;}
+footer a:hover{color:var(--sky2);}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,30,50,0.55);backdrop-filter:blur(8px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:linear-gradient(160deg,#f0f9ff,#e0f2fe);border:1.5px solid rgba(56,189,248,0.3);border-radius:16px;width:380px;max-width:95vw;padding:32px 28px;transform:translateY(16px);transition:transform 0.25s cubic-bezier(.34,1.3,.64,1);position:relative;box-shadow:0 8px 48px rgba(56,189,248,0.18);}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-title{font-family:'Sora',sans-serif;font-size:1.15rem;font-weight:800;color:var(--dark);margin-bottom:4px;}
+.modal-sub{font-size:0.8rem;color:var(--text2);margin-bottom:20px;}
+.modal-close{position:absolute;top:14px;right:14px;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text2);line-height:1;padding:4px;}
+.wallet-opt{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1.5px solid rgba(56,189,248,0.2);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all 0.12s;background:rgba(255,255,255,0.7);}
+.wallet-opt:hover{border-color:rgba(56,189,248,0.55);background:rgba(255,255,255,0.95);box-shadow:0 2px 16px rgba(56,189,248,0.15);}
+.wallet-opt-left{display:flex;align-items:center;gap:12px;}
+.wallet-opt-icon{width:40px;height:40px;border-radius:10px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.wallet-opt-info{display:flex;flex-direction:column;gap:2px;}
+.wallet-opt-name{font-family:'Sora',sans-serif;font-size:0.92rem;font-weight:700;color:var(--dark);}
+.wallet-opt-status{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text3);}
+.wallet-opt-tag{font-family:'JetBrains Mono',monospace;font-size:0.56rem;padding:2px 7px;border-radius:4px;letter-spacing:1px;}
+.wallet-opt-tag.found{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:var(--green);}
+.wallet-opt-tag.none{background:rgba(120,170,200,0.1);border:1px solid var(--border2);color:var(--text3);}
+.modal-footer{margin-top:16px;padding-top:14px;border-top:1px solid rgba(56,189,248,0.15);font-size:0.72rem;color:var(--text2);text-align:center;line-height:1.5;}
+
+/* Toast */
+.toast{position:fixed;bottom:28px;right:28px;z-index:2000;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:14px 20px;display:flex;align-items:center;gap:12px;font-size:0.82rem;color:var(--text);transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.34,1.3,.64,1);max-width:320px;pointer-events:none;box-shadow:0 4px 20px rgba(56,189,248,0.12);}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-icon{font-size:1.1rem;flex-shrink:0;}
+.toast-close{margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;font-size:1rem;padding:0 0 0 8px;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.ani{animation:fadeUp 0.45s ease forwards;opacity:0;}
+.d1{animation-delay:0.04s}.d2{animation-delay:0.12s}.d3{animation-delay:0.22s}.d4{animation-delay:0.32s}.d5{animation-delay:0.42s}
+
+@media(max-width:900px){
+  .features{grid-template-columns:1fr;}
+  .games-grid,.lb-grid{grid-template-columns:1fr;}
+  header{padding:0 16px;position:relative;}
+  .header-nav{display:none;}
+  .mobile-menu-btn{display:flex;}
+  .chain-badge{display:none;}
+  .hero-glass{padding:28px 24px 32px;}
+  .hstat{padding:10px 16px;}
+}
+@media(max-width:600px){
+  .social-cards{flex-direction:column;align-items:center;}
+}
+</style>
+</head>
+<body>
+<div class="bg-fixed">
+  <div class="bg-grid"></div>
+  <div class="bg-vignette"></div>
+  <div class="bg-glow-top"></div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <a class="logo" href="index.html">
+    <div class="logo-z">Z</div>
+    <div class="logo-text">
+      <div class="logo-name">Zentryx</div>
+      <div class="logo-tag">Web3 Platform</div>
+    </div>
+  </a>
+  <nav class="header-nav">
+    <a class="nav-link active" href="index.html">Home</a>
+    <a class="nav-link" href="chains.html">Games</a>
+    <a class="nav-link" href="swap.html">NFT P2P</a>
+    <a class="nav-link" href="leaderboard.html">Leaderboard</a>
+    <a class="nav-link" href="rewards.html">Rewards</a>
+    <a class="nav-link" href="about.html">About</a>
+  </nav>
+  <div class="header-right">
+    <div class="chain-badge"><div class="chain-dot"></div>Base Network</div>
+    <button class="wallet-btn" id="walletBtn" onclick="openWalletModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" fill="currentColor"/><path d="M22 11V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2"/></svg>
+      Connect Wallet
+    </button>
+    <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileNav()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+<nav class="mobile-nav" id="mobileNav">
+  <a href="index.html" onclick="toggleMobileNav()">Home</a>
+  <a href="chains.html" onclick="toggleMobileNav()">Games</a>
+  <a href="swap.html" onclick="toggleMobileNav()">NFT P2P</a>
+  <a href="leaderboard.html" onclick="toggleMobileNav()">Leaderboard</a>
+  <a href="rewards.html" onclick="toggleMobileNav()">Rewards</a>
+  <a href="about.html" onclick="toggleMobileNav()">About</a>
+</nav>
+
+<!-- ══ HERO ══ -->
+<div class="hero ani d1">
+  <!-- Giant ghost wordmark -->
+  <div class="hero-wordmark">ZENTRYX</div>
+
+  <!-- Floating glass card -->
+  <div class="hero-glass">
+    <div class="hero-eyebrow"><div class="eyebrow-dot"></div>WEB3 GAMING &amp; TRADING PLATFORM</div>
+    <h1 class="hero-headline">OWN YOUR <span>PROGRESS</span></h1>
+    <p class="hero-desc">
+      Play on-chain games, check wallet airdrop eligibility, and trade NFTs <a href="swap.html">peer-to-peer</a> with zero intermediaries. Your assets, your rules.
+    </p>
+    <div class="hero-stats">
+      <div class="hstat">
+        <div class="hstat-val" id="heroPlayers">12.4K</div>
+        <div class="hstat-label">Active Traders</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-val" id="heroSwaps">89K</div>
+        <div class="hstat-label">Swaps Completed</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-val" id="heroVolume">$2.1M</div>
+        <div class="hstat-label">Total Volume</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-val">4</div>
+        <div class="hstat-label">Networks</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CORE FEATURES ══ -->
+<div class="section-divider ani d2">01 — CORE FEATURES</div>
+<div class="features ani d2">
+  <div class="feat-card fc-games">
+    <span class="feat-icon">🎮</span>
+    <div class="feat-title">On-Chain Games</div>
+    <p class="feat-desc">Earn XP and rewards playing dice, wheel of fortune, and more — all verifiable on-chain.</p>
+    <a href="chains.html" class="feat-btn">Play Now <span class="feat-btn-arrow">→</span></a>
+  </div>
+  <div class="feat-card fc-wallet">
+    <span class="feat-icon">🔍</span>
+    <div class="feat-title">Wallet Checker</div>
+    <p class="feat-desc">Analyze any wallet for airdrop eligibility across multiple protocols and chains.</p>
+    <a href="about.html" class="feat-btn">Check Wallet <span class="feat-btn-arrow">→</span></a>
+  </div>
+  <div class="feat-card fc-swap">
+    <span class="feat-icon">🔄</span>
+    <div class="feat-title">P2P Swap</div>
+    <p class="feat-desc">Trade NFTs for NFTs or NFTs for crypto directly peer-to-peer — no middlemen, no fees.</p>
+    <a href="swap.html" class="feat-btn">Start Trading <span class="feat-btn-arrow">→</span></a>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══ GAMES ══ -->
+<div class="section ani d3">
+  <div class="section-header">
+    <div class="section-num">02</div>
+    <div class="section-line"></div>
+    <div class="section-label">Live Games</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="games-grid">
+    <div class="game-card gbase">
+      <div class="game-card-top">
+        <div class="game-icon-big">🎲</div>
+        <div class="game-status-tag gst-live">● LIVE</div>
+      </div>
+      <div class="game-name">Dice Roll</div>
+      <div class="game-chain-label">BASE CHAIN · MATCH THE NUMBER</div>
+      <div class="game-desc">Pick a number 1–6, roll the dice, and earn XP. Match exactly to hit the jackpot — up to 750 XP per roll.</div>
+      <div class="game-xp-row">
+        <span class="game-xp-label">MAX XP / ROLL</span>
+        <span class="game-xp-val">750 XP</span>
+      </div>
+      <button class="game-play-btn glive" onclick="window.location.href='dice.html'">PLAY NOW →</button>
+    </div>
+    <div class="game-card gink">
+      <div class="game-card-top">
+        <div class="game-icon-big">🎡</div>
+        <div class="game-status-tag gst-live">● LIVE</div>
+      </div>
+      <div class="game-name">Wheel of Fortune</div>
+      <div class="game-chain-label">INK CHAIN · SPIN TO WIN</div>
+      <div class="game-desc">Spin the wheel on Ink Chain and win XP. Each spin is an on-chain transaction — fully transparent and verifiable.</div>
+      <div class="game-xp-row">
+        <span class="game-xp-label">MAX XP / SPIN</span>
+        <span class="game-xp-val">500 XP</span>
+      </div>
+      <button class="game-play-btn glive" onclick="window.location.href='wheel.html'">PLAY NOW →</button>
+    </div>
+    <div class="game-card gbase">
+      <div class="game-card-top">
+        <div class="game-icon-big">🏓</div>
+        <div class="game-status-tag gst-soon">SOON</div>
+      </div>
+      <div class="game-name">Plinko</div>
+      <div class="game-chain-label">BASE CHAIN · DROP &amp; WIN</div>
+      <div class="game-desc">Drop the ball, watch it bounce through pegs, and land on a XP multiplier. Classic on-chain Plinko coming soon.</div>
+      <div class="game-xp-row">
+        <span class="game-xp-label">MAX XP / DROP</span>
+        <span class="game-xp-val">1000 XP</span>
+      </div>
+      <button class="game-play-btn gsoon" disabled>COMING SOON</button>
+    </div>
+    <div class="game-card gink">
+      <div class="game-card-top">
+        <div class="game-icon-big">🃏</div>
+        <div class="game-status-tag gst-soon">SOON</div>
+      </div>
+      <div class="game-name">Card Battle</div>
+      <div class="game-chain-label">INK CHAIN · STRATEGY</div>
+      <div class="game-desc">Compete in on-chain card battles, build your deck, and climb the ranks. Strategy meets blockchain.</div>
+      <div class="game-xp-row">
+        <span class="game-xp-label">MAX XP / BATTLE</span>
+        <span class="game-xp-val">600 XP</span>
+      </div>
+      <button class="game-play-btn gsoon" disabled>COMING SOON</button>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══ LEADERBOARD ══ -->
+<div class="section ani d4">
+  <div class="section-header">
+    <div class="section-num">03</div>
+    <div class="section-line"></div>
+    <div class="section-label">Global Leaderboard</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="lb-grid">
+    <div class="lb-table">
+      <div class="lb-head"><div>#</div><div>WALLET</div><div>TOTAL XP</div><div>CHAIN</div><div>GAMES</div></div>
+      <div id="lbBody"><div class="lb-empty">Loading leaderboard…</div></div>
+    </div>
+    <div class="lb-sidebar">
+      <div class="lb-side-card">
+        <div class="lsc-title">Your XP</div>
+        <div class="my-xp-big" id="myXPBig">—</div>
+        <div class="my-xp-label">Total XP Earned</div>
+        <div class="xp-bar-wrap">
+          <div class="xp-bar-labels"><span id="myLvl">Level 1</span><span id="myNextXP">→ 200 XP</span></div>
+          <div class="xp-bar"><div class="xp-bar-fill" id="myXPBar" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="lb-side-card">
+        <div class="lsc-title">XP Milestones</div>
+        <div class="tier-list">
+          <div class="tier-item" id="tier1"><div class="tier-left"><span class="tier-icon">🪖</span><div><div class="tier-name">Zentryx Recruit</div><div class="tier-xp">0 – 3,000 XP</div></div></div><span class="tier-check" style="display:none">✓</span></div>
+          <div class="tier-item" id="tier2"><div class="tier-left"><span class="tier-icon">🕵️</span><div><div class="tier-name">Zentryx Agent</div><div class="tier-xp">3,000 – 10,000 XP</div></div></div><span class="tier-check" style="display:none">✓</span></div>
+          <div class="tier-item" id="tier3"><div class="tier-left"><span class="tier-icon">⚙️</span><div><div class="tier-name">Zentryx Operative</div><div class="tier-xp">10,000 – 25,000 XP</div></div></div><span class="tier-check" style="display:none">✓</span></div>
+          <div class="tier-item" id="tier4"><div class="tier-left"><span class="tier-icon">💠</span><div><div class="tier-name">Zentryx Elite</div><div class="tier-xp">25,000 – 60,000 XP</div></div></div><span class="tier-check" style="display:none">✓</span></div>
+          <div class="tier-item" id="tier5"><div class="tier-left"><span class="tier-icon">🧠</span><div><div class="tier-name">Zentryx Master</div><div class="tier-xp">60,000 – 140,000 XP</div></div></div><span class="tier-check" style="display:none">✓</span></div>
+          <div class="tier-item" id="tier6"><div class="tier-left"><span class="tier-icon">🏆</span><div><div class="tier-name">Zentryx Champion</div><div class="tier-xp">140,000 – 300,000 XP</div></div></div><span class="tier-check" style="display:none">✓</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ══ SOCIAL ══ -->
+<div class="social-section ani d5">
+  <div class="social-section-label">Join the Community</div>
+  <div class="social-cards">
+    <div class="social-card x-card">
+      <img src="https://unavatar.io/twitter/VahidAbdulK" class="social-avatar"
+        onerror="this.style.cssText='width:64px;height:64px;border-radius:50%;background:#0a1520;display:flex;align-items:center;justify-content:center;margin-bottom:12px;border:2px solid #b8d8f0'">
+      <div class="social-card-name">Developer</div>
+      <div class="social-card-handle">@VahidAbdulK</div>
+      <a href="https://x.com/intent/follow?screen_name=VahidAbdulK" target="_blank" class="social-card-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        Follow Dev
+      </a>
+    </div>
+    <div class="social-card x-card">
+      <img src="https://unavatar.io/twitter/ZentryxHQ" class="social-avatar"
+        onerror="this.style.cssText='width:64px;height:64px;border-radius:50%;background:#0a1520;display:flex;align-items:center;justify-content:center;margin-bottom:12px;border:2px solid #b8d8f0'">
+      <div class="social-card-name">Zentryx</div>
+      <div class="social-card-handle">@ZentryxHQ</div>
+      <a href="https://x.com/ZentryxHQ" target="_blank" class="social-card-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        Follow Zentryx
+      </a>
+    </div>
+    <div class="social-card discord-card">
+      <div class="social-avatar discord-av">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="#fff"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.045.04.06a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+      </div>
+      <div class="social-card-name">Zentryx</div>
+      <div class="social-card-handle">Community Server</div>
+      <a href="https://discord.gg/zentryx" target="_blank" class="social-card-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.045.04.06a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+        Join Discord
+      </a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>© 2025 ZENTRYX — WEB3 PLATFORM</span>
+  <span>BASE · INK · MULTICHAIN</span>
+  <span>Built by <a href="https://x.com/VahidAbdulK" target="_blank">@VahidAbdulK</a></span>
+</footer>
+
+<!-- WALLET MODAL -->
+<div class="modal-overlay" id="walletModal" onclick="closeModalOuter(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Connect Wallet</div>
+    <div class="modal-sub">Choose a wallet to connect to Zentryx</div>
+    <div id="walletList"></div>
+    <div class="modal-footer">By connecting, you agree to our terms.<br>Your wallet is never stored without permission.</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toastIcon">📢</span>
+  <span id="toastMsg"></span>
+  <button class="toast-close" onclick="hideToast()">✕</button>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://wbrspewpvzoziqfinpfd.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndicnNwZXdwdnpvemlxZmlucGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNTQ2MjEsImV4cCI6MjA4OTgzMDYyMX0.j_MgjstUKK6K9DnCEcC4ilIocHY3VNCwMNiT47BrBUo';
+const LEVELS = [0,200,500,1000,2000,4000,8000,15000,28000,50000,90000,150000,250000,400000,650000];
+const STATE = { connected:false, wallet:null, xp:0 };
+
+// ── WALLETS ──────────────────────────────────────────────────
+const WALLETS = [
+  { name:'Rabby Wallet',    detect:()=>!!(window.ethereum?.isRabby),                                                               install:'https://rabby.io',
+    icon:`<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#8697FF"/><path d="M10 26c0-5.523 4.477-10 10-10h4c2.761 0 5 2.239 5 5s-2.239 5-5 5H10z" fill="white"/><path d="M10 26c0-2.761 2.239-5 5-5h9l-4 5H10z" fill="#C4CBFF"/><circle cx="26" cy="17" r="4" fill="white"/></svg>` },
+  { name:'MetaMask',        detect:()=>!!(window.ethereum?.isMetaMask&&!window.ethereum?.isRabby),                                  install:'https://metamask.io/download/',
+    icon:`<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#F6851B"/><path d="M31 9l-8.5 6.3 1.6-3.8L31 9z" fill="#E2761B"/><path d="M9 9l8.4 6.4-1.5-3.9L9 9z" fill="#E4761B"/><path d="M28.2 25.6l-2.3 3.5 4.9 1.3 1.4-4.7-4-.1z" fill="#E4761B"/><path d="M8.4 25.7l1.4 4.7 4.9-1.3-2.3-3.5-4 .1z" fill="#E4761B"/><path d="M14.4 19.2l-1.3 2 4.7.2-.2-5-3.2 2.8z" fill="#E4761B"/><path d="M25.6 19.2l-3.3-2.9-.1 5.1 4.7-.2-1.3-2z" fill="#E4761B"/><path d="M14.7 29.1l2.8-1.4-2.4-1.9-.4 3.3z" fill="#E4761B"/><path d="M22.5 27.7l2.8 1.4-.4-3.3-2.4 1.9z" fill="#E4761B"/></svg>` },
+  { name:'Phantom',         detect:()=>!!(window.phantom?.ethereum),                                                               install:'https://phantom.app/download',
+    icon:`<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#AB9FF2"/><path d="M20 8c-6.627 0-12 5.373-12 12 0 3.866 1.828 7.31 4.672 9.54.322.253.743-.044.676-.445A9.98 9.98 0 0113 27c0-5.523 4.477-10 10-10 1.72 0 3.337.436 4.74 1.202.297.163.65-.063.6-.4A12.015 12.015 0 0020 8z" fill="white"/><path d="M25 19c-3.314 0-6 2.686-6 6s2.686 6 6 6 6-2.686 6-6-2.686-6-6-6zm-1.5 6.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm3 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" fill="white"/></svg>` },
+  { name:'Coinbase Wallet', detect:()=>!!(window.ethereum?.isCoinbaseWallet),                                                      install:'https://www.coinbase.com/wallet/downloads',
+    icon:`<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#1652F0"/><circle cx="20" cy="20" r="10" fill="white"/><path d="M20 13c-3.866 0-7 3.134-7 7s3.134 7 7 7 7-3.134 7-7-3.134-7-7-7zm-2.5 9.5v-5h5v5h-5z" fill="#1652F0"/></svg>` },
+  { name:'Other EVM Wallet',detect:()=>!!(window.ethereum)&&!window.ethereum?.isRabby&&!window.ethereum?.isMetaMask&&!window.ethereum?.isCoinbaseWallet, install:'https://ethereum.org/en/wallets/find-wallet/',
+    icon:`<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#627EEA"/><path d="M20 8v8.87l7.5 3.35L20 8z" fill="white" opacity=".6"/><path d="M20 8L12.5 20.22l7.5-3.35V8z" fill="white"/><path d="M20 27.18v4.82l7.5-10.38L20 27.18z" fill="white" opacity=".6"/><path d="M20 32v-4.82l-7.5-5.56L20 32z" fill="white"/></svg>` },
+];
+
+function openWalletModal() {
+  if (STATE.connected) { disconnectWallet(); return; }
+  buildWalletList();
+  document.getElementById('walletModal').classList.add('open');
+}
+function closeModal() { document.getElementById('walletModal').classList.remove('open'); }
+function closeModalOuter(e) { if (e.target.id==='walletModal') closeModal(); }
+
+function buildWalletList() {
+  const el = document.getElementById('walletList');
+  el.innerHTML = '';
+  WALLETS.forEach(w => {
+    const found = w.detect();
+    const div = document.createElement('div');
+    div.className = 'wallet-opt';
+    div.innerHTML = `
+      <div class="wallet-opt-left">
+        <div class="wallet-opt-icon">${w.icon}</div>
+        <div class="wallet-opt-info">
+          <div class="wallet-opt-name">${w.name}</div>
+          <div class="wallet-opt-status" style="color:${found?'var(--sky3)':'var(--text3)'};">${found ? '● Detected · Ready to connect' : w.install ? 'Not installed · Click to install' : 'Not detected'}</div>
+        </div>
+      </div>
+      <span class="wallet-opt-tag ${found?'found':'none'}">${found?'● Live':w.install?'Install':''}</span>`;
+    div.onclick = () => { if (found) connectWallet(w.name); else if (w.install) window.open(w.install,'_blank'); else connectWallet(w.name); };
+    el.appendChild(div);
+  });
+}
+
+async function connectWallet(walletName) {
+  let provider = window.ethereum;
+  if (walletName === 'Phantom' && window.phantom?.ethereum) provider = window.phantom.ethereum;
+  if (!provider) { showToast('No wallet detected. Install MetaMask or Rabby.','⚠️'); return; }
+  try {
+    const accounts = await provider.request({ method:'eth_requestAccounts' });
+    STATE.wallet = accounts[0]; STATE.connected = true;
+    closeModal(); onConnected();
+  } catch(e) { console.error(e); }
+}
+
+function disconnectWallet() {
+  STATE.connected=false; STATE.wallet=null; STATE.xp=0;
+  const btn = document.getElementById('walletBtn');
+  btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" fill="currentColor"/><path d="M22 11V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2"/></svg> Connect Wallet`;
+  btn.classList.remove('connected');
+  document.getElementById('myXPBig').textContent = '—';
+  updateTierUI(0);
+}
+
+async function onConnected() {
+  const btn = document.getElementById('walletBtn');
+  btn.innerHTML = `<div style="width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 6px #10b981;flex-shrink:0;"></div> ${STATE.wallet.slice(0,6)}...${STATE.wallet.slice(-4)}`;
+  btn.classList.add('connected');
+  await loadMyXP();
+  renderLeaderboard();
+}
+
+async function loadMyXP() {
+  if (!STATE.wallet) return;
+  try {
+    const short = STATE.wallet.slice(0,6)+'...'+STATE.wallet.slice(-4);
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?wallet=eq.${short}&select=total_xp`, {
+      headers:{ 'apikey':SUPABASE_KEY, 'Authorization':`Bearer ${SUPABASE_KEY}` }
+    });
+    const data = await res.json();
+    if (data&&data.length>0) { STATE.xp=data[0].total_xp||0; updateXPUI(STATE.xp); }
+  } catch(e) { console.error(e); }
+}
+
+function updateXPUI(xp) {
+  document.getElementById('myXPBig').textContent = xp.toLocaleString();
+  let lvl=1;
+  for (let i=0;i<LEVELS.length-1;i++) { if(xp>=LEVELS[i]) lvl=i+1; }
+  const cur=LEVELS[lvl-1]||0, nxt=LEVELS[lvl]||(cur+15000);
+  const pct=Math.min(100,((xp-cur)/(nxt-cur))*100);
+  document.getElementById('myLvl').textContent = 'Level '+lvl;
+  document.getElementById('myNextXP').textContent = lvl>=LEVELS.length ? '✦ MAX' : '→ '+nxt.toLocaleString()+' XP';
+  document.getElementById('myXPBar').style.width = pct+'%';
+  updateTierUI(xp);
+}
+
+function updateTierUI(xp) {
+  [[1,0],[2,3000],[3,10000],[4,25000],[5,60000],[6,140000]].forEach(([n,req]) => {
+    const el = document.getElementById('tier'+n);
+    if (!el) return;
+    const chk = el.querySelector('.tier-check');
+    if (xp>=req) { el.classList.add('unlocked'); chk.style.display='block'; }
+    else { el.classList.remove('unlocked'); chk.style.display='none'; }
+  });
+}
+
+async function renderLeaderboard() {
+  const body = document.getElementById('lbBody');
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?order=total_xp.desc&limit=10`, {
+      headers:{ 'apikey':SUPABASE_KEY, 'Authorization':`Bearer ${SUPABASE_KEY}` }
+    });
+    const data = await res.json();
+    if (!data||data.length===0) { body.innerHTML='<div class="lb-empty">No players yet — be the first!</div>'; return; }
+    const medals=['🥇','🥈','🥉'];
+    const rcls=['r1','r2','r3','rn','rn','rn','rn','rn','rn','rn'];
+    const myShort = STATE.wallet ? STATE.wallet.slice(0,6)+'...'+STATE.wallet.slice(-4) : null;
+    body.innerHTML = data.map((p,i) => {
+      const isMe = p.wallet===myShort;
+      return `<div class="lb-row ${isMe?'me':''}">
+        <div class="lb-rank ${rcls[i]}">${i<3?medals[i]:i+1}</div>
+        <div class="lb-wallet">${p.wallet}${isMe?'<span class="you-tag">YOU</span>':''}</div>
+        <div class="lb-xp">${(p.total_xp||0).toLocaleString()}</div>
+        <div class="lb-chain">BASE</div>
+        <div class="lb-games">${p.games_played||0}</div>
+      </div>`;
+    }).join('');
+  } catch(e) { body.innerHTML='<div class="lb-empty">Failed to load leaderboard</div>'; }
+}
+
+function toggleMobileNav() { document.getElementById('mobileNav').classList.toggle('open'); }
+
+let toastTimer;
+function showToast(msg, icon='📢') {
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastIcon').textContent = icon;
+  document.getElementById('toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, 4000);
+}
+function hideToast() { document.getElementById('toast').classList.remove('show'); }
+
+renderLeaderboard();
+</script>
+</body>
+</html>
