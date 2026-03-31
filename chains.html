@@ -859,75 +859,6 @@ footer a:hover { color:var(--sky2); }
         <div class="chain-enter">ENTER INK <span class="enter-arr">→</span></div>
       </a>
     </div>
-    <!-- Games showcase below -->
-    <div style="margin-top:40px;">
-      <div class="section-header" style="margin-bottom:20px;">
-        <div class="section-num">GAMES</div>
-        <div class="section-label">All Games</div>
-        <div class="section-line"></div>
-      </div>
-      <div class="games-tabs">
-        <button class="gtab active" onclick="switchTab('base',this)">⬛ Base Chain</button>
-        <button class="gtab" onclick="switchTab('ink',this)">🟦 Ink Chain</button>
-      </div>
-      <div class="games-panel active" id="panel-base">
-        <div class="game-card gbase">
-          <div class="game-card-top"><div class="game-icon-big">🎯</div><span class="game-status-tag gst-live">● LIVE</span></div>
-          <div class="game-name">Plinko</div>
-          <div class="game-chain-label">BASE CHAIN · ARCADE</div>
-          <div class="game-desc">Drop the ball and watch it bounce down the pegs. Every drop triggers a transaction and awards XP. Pure onchain chaos.</div>
-          <div class="game-xp-row"><span class="game-xp-label">XP PER PLAY</span><span class="game-xp-val">Up to 500 XP</span></div>
-          <button class="game-play-btn glive" onclick="enterChain('base')">▶ PLAY NOW</button>
-        </div>
-        <div class="game-card gbase">
-          <div class="game-card-top"><div class="game-icon-big">🎲</div><span class="game-status-tag gst-soon">SOON</span></div>
-          <div class="game-name">Dice Roll</div>
-          <div class="game-chain-label">BASE CHAIN · CHANCE</div>
-          <div class="game-desc">Roll the dice onchain. Each roll is a transaction recorded forever. Simple, fast, and surprisingly addictive.</div>
-          <div class="game-xp-row"><span class="game-xp-label">XP PER ROLL</span><span class="game-xp-val">Up to 500 XP</span></div>
-          <button class="game-play-btn gsoon" disabled>🔒 COMING SOON</button>
-        </div>
-        <div class="game-card gbase">
-          <div class="game-card-top"><div class="game-icon-big">🔍</div><span class="game-status-tag gst-soon">SOON</span></div>
-          <div class="game-name">Wallet Analyzer</div>
-          <div class="game-chain-label">BASE CHAIN · TOOL</div>
-          <div class="game-desc">Paste any wallet. Get your transaction count, contracts touched, NFT interactions, and an airdrop readiness score.</div>
-          <button class="game-play-btn gsoon" disabled>🔒 COMING SOON</button>
-        </div>
-        <div class="game-card gbase">
-          <div class="game-card-top"><div class="game-icon-big">⇄</div><span class="game-status-tag gst-soon">SOON</span></div>
-          <div class="game-name">P2P NFT Swap</div>
-          <div class="game-chain-label">BASE CHAIN · MARKETPLACE</div>
-          <div class="game-desc">Swap NFTs or tokens directly. No middlemen, zero platform fees, fully onchain and trustless.</div>
-          <button class="game-play-btn gsoon" disabled>🔒 COMING SOON</button>
-        </div>
-      </div>
-      <div class="games-panel" id="panel-ink">
-        <div class="game-card gink">
-          <div class="game-card-top"><div class="game-icon-big">🎨</div><span class="game-status-tag gst-soon">SOON</span></div>
-          <div class="game-name">Pixel Painter</div>
-          <div class="game-chain-label">INK CHAIN · CREATIVE</div>
-          <div class="game-desc">Paint pixels on a shared global canvas. Every pixel you place is an onchain transaction.</div>
-          <div class="game-xp-row"><span class="game-xp-label">XP PER PIXEL</span><span class="game-xp-val">Up to 500 XP</span></div>
-          <button class="game-play-btn gsoon" disabled>🔒 COMING SOON</button>
-        </div>
-        <div class="game-card gink">
-          <div class="game-card-top"><div class="game-icon-big">🎡</div><span class="game-status-tag gst-soon">SOON</span></div>
-          <div class="game-name">Wheel of Fortune</div>
-          <div class="game-chain-label">INK CHAIN · CHANCE</div>
-          <div class="game-desc">Spin the wheel and let fate decide. Variable XP rewards. Each spin is verifiable onchain.</div>
-          <div class="game-xp-row"><span class="game-xp-label">XP PER SPIN</span><span class="game-xp-val">Up to 500 XP</span></div>
-          <button class="game-play-btn gsoon" disabled>🔒 COMING SOON</button>
-        </div>
-        <div class="game-card gink">
-          <div class="game-card-top"><div class="game-icon-big">🔍</div><span class="game-status-tag gst-soon">SOON</span></div>
-          <div class="game-name">Wallet Analyzer</div>
-          <div class="game-chain-label">INK CHAIN · TOOL</div>
-          <div class="game-desc">Ink-specific wallet insights. See your painting activity, streak history, and airdrop eligibility.</div>
-          <button class="game-play-btn gsoon" disabled>🔒 COMING SOON</button>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -972,12 +903,6 @@ function toggleMobileNav() {
   document.getElementById('mobileNav').classList.toggle('open');
 }
 
-function switchTab(chain, btn) {
-  document.querySelectorAll('.gtab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.games-panel').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('panel-' + chain).classList.add('active');
-}
 const SUPABASE_URL = 'https://wbrspewpvzoziqfinpfd.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndicnNwZXdwdnpvemlxZmlucGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNTQ2MjEsImV4cCI6MjA4OTgzMDYyMX0.j_MgjstUKK6K9DnCEcC4ilIocHY3VNCwMNiT47BrBUo';
 
