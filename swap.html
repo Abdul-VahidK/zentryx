@@ -193,6 +193,7 @@ input[type=text]:focus{border-color:var(--sky2)}
 const CHARS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function genCode(){return Array.from({length:6},()=>CHARS[Math.floor(Math.random()*CHARS.length)]).join('')}
 let MY_CODE='';
+let CONNECTED_WALLET='';
 // Render on load — trade room is shown immediately
 renderInventory();
 renderPeerOffer();
@@ -211,11 +212,24 @@ const PEER_OFFER=[
 ];
 
 function generateCode(){
+  if(!CONNECTED_WALLET) return;
+  const storageKey='zentryx_code_'+CONNECTED_WALLET;
+  // Block if this wallet already has a code
+  if(localStorage.getItem(storageKey)){
+    MY_CODE=localStorage.getItem(storageKey);
+    document.getElementById('my-code').textContent=MY_CODE;
+    document.getElementById('code-display').style.display='flex';
+    return;
+  }
+  // First time — generate, save permanently, lock the button
   MY_CODE=genCode();
+  localStorage.setItem(storageKey, MY_CODE);
   document.getElementById('my-code').textContent=MY_CODE;
   document.getElementById('code-display').style.display='flex';
-  document.getElementById('gen-btn').textContent='↺ Regenerate';
-  document.getElementById('gen-hint').style.display='none';
+  const genBtn=document.getElementById('gen-btn');
+  genBtn.textContent='Your Code';
+  genBtn.disabled=true;
+  genBtn.onclick=null;
 }
   
 function copyCode(){
@@ -327,32 +341,52 @@ function connectWallet(btn){
     btn.style.background='linear-gradient(135deg,#0ea5e9,#0284c7)';
     btn.style.color='#fff';
     delete btn.dataset.connected;
+    CONNECTED_WALLET='';
+    MY_CODE='';
     // Lock everything
     tradeBody.classList.add('trade-locked');
     invWrap.classList.add('trade-locked');
     lockMsg.style.display='';
-    // Reset generate code
+    // Reset generate code UI
     genBtn.disabled=true;
     genBtn.classList.remove('gen-ready');
     genBtn.textContent='Generate Code';
+    genBtn.onclick=generateCode;
     document.getElementById('code-display').style.display='none';
     document.getElementById('my-code').textContent='—';
-    MY_CODE='';
   } else {
-    // Connect
+    // Connect — simulate wallet address
     const a='0x'+Math.random().toString(16).slice(2,8).toUpperCase()+'...A7F2';
     btn.textContent=a;
     btn.style.background='rgba(16,185,129,.1)';
     btn.style.color='#10b981';
     btn.dataset.connected='1';
+    CONNECTED_WALLET=a;
     // Unlock everything
     tradeBody.classList.remove('trade-locked');
     invWrap.classList.remove('trade-locked');
     lockMsg.style.display='none';
-    // Enable generate code button
-    genBtn.disabled=false;
-    genBtn.classList.add('gen-ready');
+    // Check if this wallet already has a saved code
+    const storageKey='zentryx_code_'+a;
+    const savedCode=localStorage.getItem(storageKey);
+    if(savedCode){
+      // Restore existing code automatically
+      MY_CODE=savedCode;
+      document.getElementById('my-code').textContent=MY_CODE;
+      document.getElementById('code-display').style.display='flex';
+      genBtn.textContent='Your Code';
+      genBtn.disabled=true;
+      genBtn.onclick=null;
+      genBtn.classList.add('gen-ready');
+    } else {
+      // New wallet — enable generate button
+      genBtn.disabled=false;
+      genBtn.classList.add('gen-ready');
+      genBtn.textContent='Generate Code';
+      genBtn.onclick=generateCode;
+    }
   }
+}
 }
 </script>
 </body>
