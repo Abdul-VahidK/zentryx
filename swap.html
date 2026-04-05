@@ -189,6 +189,22 @@ input[type=text]:focus{border-color:var(--sky2)}
   </div><!-- /inventory-panel-wrap -->
 </main>
 
+<!-- WALLET MODAL -->
+<div id="walletModal" style="display:none;position:fixed;inset:0;background:rgba(10,30,50,0.55);backdrop-filter:blur(8px);z-index:1000;align-items:center;justify-content:center;">
+  <div onclick="event.stopPropagation()" style="background:linear-gradient(160deg,#f0f9ff,#e0f2fe);border:1.5px solid rgba(56,189,248,0.3);border-radius:16px;width:380px;max-width:95vw;padding:32px 28px;position:relative;box-shadow:0 8px 48px rgba(56,189,248,0.18);">
+    <button onclick="closeWalletModal()" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:1.3rem;cursor:pointer;color:#3a6080;line-height:1;padding:4px;">✕</button>
+    <div style="font-family:'Sora',sans-serif;font-size:1.15rem;font-weight:800;color:#0f1e2e;margin-bottom:4px;">Connect Wallet</div>
+    <div style="font-size:0.8rem;color:#3a6080;margin-bottom:20px;">Choose a wallet to connect to Zentryx</div>
+    <div id="walletList"></div>
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(56,189,248,0.15);font-size:0.72rem;color:#3a6080;text-align:center;line-height:1.5;">By connecting, you agree to our terms.<br>Your wallet is never stored without permission.</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" style="display:none;position:fixed;bottom:28px;right:28px;z-index:2000;background:#f5fbff;border:1px solid #90c4e8;border-radius:10px;padding:14px 20px;font-size:0.82rem;color:#0f2a3f;box-shadow:0 4px 20px rgba(56,189,248,0.12);max-width:320px;">
+  <span id="toast-msg"></span>
+</div>
+  
 <script>
 const CHARS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function genCode(){return Array.from({length:6},()=>CHARS[Math.floor(Math.random()*CHARS.length)]).join('')}
@@ -213,7 +229,7 @@ const PEER_OFFER=[
 
 function generateCode(){
   if(!CONNECTED_WALLET) return;
-  const storageKey='zentryx_code_'+CONNECTED_WALLET;
+  const storageKey='zentryx_code_'+CONNECTED_WALLET.toLowerCase();
   // Block if this wallet already has a code
   if(localStorage.getItem(storageKey)){
     MY_CODE=localStorage.getItem(storageKey);
@@ -329,12 +345,21 @@ function confirmTrade(){
   },2000);
 }
 
-function connectWallet(btn){
-  const genBtn=document.getElementById('gen-btn');
-  const tradeBody=document.getElementById('trade-body');
-  const invWrap=document.getElementById('inventory-panel-wrap');
-  const lockMsg=document.getElementById('lock-msg');
+// ── WALLET DEFINITIONS ──────────────────────────────────────
+const WALLETS=[
+  { name:'Rabby Wallet',    detect:()=>!!(window.ethereum?.isRabby),                                                               install:'https://rabby.io',
+    icon:`<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#8697FF"/><path d="M10 26c0-5.523 4.477-10 10-10h4c2.761 0 5 2.239 5 5s-2.239 5-5 5H10z" fill="white"/><path d="M10 26c0-2.761 2.239-5 5-5h9l-4 5H10z" fill="#C4CBFF"/><circle cx="26" cy="17" r="4" fill="white"/></svg>` },
+  { name:'MetaMask',        detect:()=>!!(window.ethereum?.isMetaMask&&!window.ethereum?.isRabby),                                  install:'https://metamask.io/download/',
+    icon:`<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#F6851B"/><path d="M31 9l-8.5 6.3 1.6-3.8L31 9z" fill="#E2761B"/><path d="M9 9l8.4 6.4-1.5-3.9L9 9z" fill="#E4761B"/><path d="M28.2 25.6l-2.3 3.5 4.9 1.3 1.4-4.7-4-.1z" fill="#E4761B"/><path d="M8.4 25.7l1.4 4.7 4.9-1.3-2.3-3.5-4 .1z" fill="#E4761B"/><path d="M14.4 19.2l-1.3 2 4.7.2-.2-5-3.2 2.8z" fill="#E4761B"/><path d="M25.6 19.2l-3.3-2.9-.1 5.1 4.7-.2-1.3-2z" fill="#E4761B"/><path d="M14.7 29.1l2.8-1.4-2.4-1.9-.4 3.3z" fill="#E4761B"/><path d="M22.5 27.7l2.8 1.4-.4-3.3-2.4 1.9z" fill="#E4761B"/></svg>` },
+  { name:'Phantom',         detect:()=>!!(window.phantom?.ethereum),                                                               install:'https://phantom.app/download',
+    icon:`<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#AB9FF2"/><path d="M20 8c-6.627 0-12 5.373-12 12 0 3.866 1.828 7.31 4.672 9.54.322.253.743-.044.676-.445A9.98 9.98 0 0113 27c0-5.523 4.477-10 10-10 1.72 0 3.337.436 4.74 1.202.297.163.65-.063.6-.4A12.015 12.015 0 0020 8z" fill="white"/><path d="M25 19c-3.314 0-6 2.686-6 6s2.686 6 6 6 6-2.686 6-6-2.686-6-6-6zm-1.5 6.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm3 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" fill="white"/></svg>` },
+  { name:'Coinbase Wallet', detect:()=>!!(window.ethereum?.isCoinbaseWallet),                                                      install:'https://www.coinbase.com/wallet/downloads',
+    icon:`<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#1652F0"/><circle cx="20" cy="20" r="10" fill="white"/><path d="M20 13c-3.866 0-7 3.134-7 7s3.134 7 7 7 7-3.134 7-7-3.134-7-7-7zm-2.5 9.5v-5h5v5h-5z" fill="#1652F0"/></svg>` },
+  { name:'Other EVM Wallet',detect:()=>!!(window.ethereum)&&!window.ethereum?.isRabby&&!window.ethereum?.isMetaMask&&!window.ethereum?.isCoinbaseWallet, install:'https://ethereum.org/en/wallets/find-wallet/',
+    icon:`<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#627EEA"/><path d="M20 8v8.87l7.5 3.35L20 8z" fill="white" opacity=".6"/><path d="M20 8L12.5 20.22l7.5-3.35V8z" fill="white"/><path d="M20 27.18v4.82l7.5-10.38L20 27.18z" fill="white" opacity=".6"/><path d="M20 32v-4.82l-7.5-5.56L20 32z" fill="white"/></svg>` },
+];
 
+function connectWallet(btn){
   if(btn.dataset.connected){
     // Disconnect
     btn.textContent='Connect Wallet';
@@ -343,11 +368,13 @@ function connectWallet(btn){
     delete btn.dataset.connected;
     CONNECTED_WALLET='';
     MY_CODE='';
-    // Lock everything
+    const genBtn=document.getElementById('gen-btn');
+    const tradeBody=document.getElementById('trade-body');
+    const invWrap=document.getElementById('inventory-panel-wrap');
+    const lockMsg=document.getElementById('lock-msg');
     tradeBody.classList.add('trade-locked');
     invWrap.classList.add('trade-locked');
     lockMsg.style.display='';
-    // Reset generate code UI
     genBtn.disabled=true;
     genBtn.classList.remove('gen-ready');
     genBtn.textContent='Generate Code';
@@ -355,37 +382,95 @@ function connectWallet(btn){
     document.getElementById('code-display').style.display='none';
     document.getElementById('my-code').textContent='—';
   } else {
-    // Connect — simulate wallet address
-    const a='0x'+Math.random().toString(16).slice(2,8).toUpperCase()+'...A7F2';
-    btn.textContent=a;
-    btn.style.background='rgba(16,185,129,.1)';
-    btn.style.color='#10b981';
-    btn.dataset.connected='1';
-    CONNECTED_WALLET=a;
-    // Unlock everything
-    tradeBody.classList.remove('trade-locked');
-    invWrap.classList.remove('trade-locked');
-    lockMsg.style.display='none';
-    // Check if this wallet already has a saved code
-    const storageKey='zentryx_code_'+a;
-    const savedCode=localStorage.getItem(storageKey);
-    if(savedCode){
-      // Restore existing code automatically
-      MY_CODE=savedCode;
-      document.getElementById('my-code').textContent=MY_CODE;
-      document.getElementById('code-display').style.display='flex';
-      genBtn.textContent='Your Code';
-      genBtn.disabled=true;
-      genBtn.onclick=null;
-      genBtn.classList.add('gen-ready');
-    } else {
-      // New wallet — enable generate button
-      genBtn.disabled=false;
-      genBtn.classList.add('gen-ready');
-      genBtn.textContent='Generate Code';
-      genBtn.onclick=generateCode;
-    }
+    openWalletModal(btn);
   }
+}
+
+function openWalletModal(btn){
+  const el=document.getElementById('walletList');
+  el.innerHTML='';
+  WALLETS.forEach(w=>{
+    const found=w.detect();
+    const div=document.createElement('div');
+    div.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1.5px solid rgba(56,189,248,0.2);border-radius:10px;margin-bottom:8px;cursor:pointer;background:rgba(255,255,255,0.7);transition:all 0.12s;';
+    div.onmouseenter=()=>div.style.borderColor='rgba(56,189,248,0.55)';
+    div.onmouseleave=()=>div.style.borderColor='rgba(56,189,248,0.2)';
+    div.innerHTML=`
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;border-radius:10px;overflow:hidden;flex-shrink:0;">${w.icon}</div>
+        <div>
+          <div style="font-family:'Sora',sans-serif;font-size:0.92rem;font-weight:700;color:#0f1e2e;">${w.name}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:${found?'#0ea5e9':'#7aaac8'};margin-top:2px;">${found?'● Detected · Ready to connect':w.install?'Not installed · Click to install':'Not detected'}</div>
+        </div>
+      </div>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.56px;padding:2px 7px;border-radius:4px;letter-spacing:1px;font-size:0.56rem;${found?'background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:#10b981;':'background:rgba(120,170,200,0.1);border:1px solid #90c4e8;color:#7aaac8;'}">${found?'● Live':w.install?'Install':''}</span>`;
+    div.onclick=()=>{ if(found) doConnect(w,btn); else if(w.install) window.open(w.install,'_blank'); else doConnect(w,btn); };
+    el.appendChild(div);
+  });
+  const modal=document.getElementById('walletModal');
+  modal.style.display='flex';
+  modal.onclick=(e)=>{ if(e.target===modal) closeWalletModal(); };
+}
+
+function closeWalletModal(){
+  document.getElementById('walletModal').style.display='none';
+}
+
+async function doConnect(w, btn){
+  try {
+    let provider=window.ethereum;
+    if(w.name==='Phantom'&&window.phantom?.ethereum) provider=window.phantom.ethereum;
+    if(!provider){ showToast('No wallet detected. Install '+w.name+' first.'); return; }
+    const accounts=await provider.request({method:'eth_requestAccounts'});
+    const addr=accounts[0];
+    closeWalletModal();
+    onWalletConnected(addr, btn);
+  } catch(e){
+    if(e.code!==4001) showToast('Connection failed. Please try again.');
+    console.error(e);
+  }
+}
+
+function onWalletConnected(addr, btn){
+  const short=addr.slice(0,6)+'...'+addr.slice(-4);
+  btn.textContent=short;
+  btn.style.background='rgba(16,185,129,.1)';
+  btn.style.color='#10b981';
+  btn.dataset.connected='1';
+  CONNECTED_WALLET=addr;
+  const genBtn=document.getElementById('gen-btn');
+  const tradeBody=document.getElementById('trade-body');
+  const invWrap=document.getElementById('inventory-panel-wrap');
+  const lockMsg=document.getElementById('lock-msg');
+  tradeBody.classList.remove('trade-locked');
+  invWrap.classList.remove('trade-locked');
+  lockMsg.style.display='none';
+  // Check localStorage for existing code bound to this wallet
+  const storageKey='zentryx_code_'+addr.toLowerCase();
+  const savedCode=localStorage.getItem(storageKey);
+  if(savedCode){
+    MY_CODE=savedCode;
+    document.getElementById('my-code').textContent=MY_CODE;
+    document.getElementById('code-display').style.display='flex';
+    genBtn.textContent='Your Code';
+    genBtn.disabled=true;
+    genBtn.onclick=null;
+    genBtn.classList.add('gen-ready');
+    showToast('Welcome back! Trade code restored ✓');
+  } else {
+    genBtn.disabled=false;
+    genBtn.classList.add('gen-ready');
+    genBtn.textContent='Generate Code';
+    genBtn.onclick=generateCode;
+  }
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.style.display='block';
+  clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>t.style.display='none',4000);
 }
 }
 </script>
