@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pixel Painter — Zentryx</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='8' fill='%23000'/><text y='82' x='8' font-size='80' font-family='Arial' font-weight='900' fill='%2300eeff'>Z</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#dff0fa; --bg2:#cce8f7; --surface:#f5fbff; --surface2:#f0f8ff; --surface3:#e0f0fb;
+  --border:#b8d8f0; --border2:#90c4e8; --sky:#38bdf8; --sky2:#0ea5e9; --sky3:#0284c7;
+  --blue:#0055dd; --blue2:#1a77ff; --cyan:#06b6d4; --cyan2:#0891b2;
+  --gold:#f59e0b; --gold2:#fbbf24; --green:#10b981; --red:#ef4444;
+  --text:#0f2a3f; --text2:#3a6080; --text3:#7aaac8;
+  --dark:#0f1e2e; --glow-sky:0 0 28px rgba(56,189,248,0.45);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+
+.bg-fixed{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(56,189,248,0.12) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,0.12) 1px,transparent 1px);background-size:60px 60px;}
+.bg-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 30%,rgba(186,230,255,0.25) 100%);}
+
+/* HEADER */
+header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;background:rgba(245,251,255,0.97);border-bottom:1px solid var(--border);box-shadow:0 2px 12px rgba(56,189,248,0.1);backdrop-filter:blur(20px);flex-shrink:0;}
+header::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--sky),var(--cyan),transparent);opacity:0.8;}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-z{width:34px;height:34px;background:linear-gradient(135deg,#e0f4ff,#fff);border:1.5px solid var(--cyan);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-size:1.3rem;font-weight:900;color:var(--cyan);box-shadow:0 0 14px rgba(0,238,255,0.25);flex-shrink:0;}
+.logo-name{font-family:'Sora',sans-serif;font-size:1.2rem;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--dark);}
+.header-center{display:flex;align-items:center;gap:10px;}
+.chain-pill{display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,rgba(14,165,233,0.12),rgba(6,182,212,0.08));border:1px solid rgba(14,165,233,0.3);padding:5px 12px;border-radius:100px;font-size:0.68rem;font-family:'JetBrains Mono',monospace;color:var(--sky3);letter-spacing:1px;}
+.chain-live{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.header-right{display:flex;align-items:center;gap:8px;}
+.back-link{display:flex;align-items:center;gap:5px;font-family:'Sora',sans-serif;font-size:0.75rem;font-weight:600;text-decoration:none;color:var(--sky3);padding:5px 10px;border:1px solid var(--border);border-radius:6px;transition:all 0.15s;background:rgba(56,189,248,0.05);}
+.back-link:hover{background:rgba(56,189,248,0.12);border-color:var(--sky2);}
+.wallet-btn{display:flex;align-items:center;gap:6px;padding:7px 16px;background:linear-gradient(135deg,var(--sky2),var(--sky3));border:none;border-radius:6px;font-family:'Sora',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;cursor:pointer;transition:all 0.15s;}
+.wallet-btn:hover{transform:translateY(-1px);box-shadow:var(--glow-sky);}
+.wallet-btn.connected{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:var(--green);}
+
+/* MAIN LAYOUT */
+.main{position:relative;z-index:1;display:flex;height:calc(100vh - 56px);overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:220px;flex-shrink:0;background:rgba(245,251,255,0.97);border-right:1px solid var(--border);display:flex;flex-direction:column;gap:0;overflow-y:auto;}
+.sb-section{padding:14px 14px 10px;border-bottom:1px solid var(--border);}
+.sb-title{font-family:'JetBrains Mono',monospace;font-size:0.55rem;letter-spacing:2.5px;color:var(--text3);text-transform:uppercase;margin-bottom:10px;}
+
+/* XP Display */
+.xp-display{text-align:center;padding:6px 0 10px;}
+.xp-num{font-family:'Sora',sans-serif;font-size:2.4rem;font-weight:900;color:var(--sky3);line-height:1;text-shadow:0 0 20px rgba(14,165,233,0.25);}
+.xp-unit{font-family:'JetBrains Mono',monospace;font-size:0.52rem;letter-spacing:2px;color:var(--text3);margin-top:3px;}
+.xp-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:8px;}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--sky2),var(--cyan));border-radius:2px;transition:width 0.8s cubic-bezier(.34,1.3,.64,1);}
+
+/* Color Palette */
+.color-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.color-swatch{
+  width:100%;aspect-ratio:1;border-radius:6px;cursor:pointer;
+  border:2px solid transparent;transition:all 0.15s;position:relative;
+}
+.color-swatch:hover{transform:scale(1.1);box-shadow:0 3px 12px rgba(0,0,0,0.2);}
+.color-swatch.active{border-color:#fff;box-shadow:0 0 0 2px var(--sky2),0 4px 14px rgba(0,0,0,0.25);transform:scale(1.12);}
+.color-swatch.active::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.5);}
+
+/* Selected color preview */
+.color-preview{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-top:8px;}
+.preview-dot{width:20px;height:20px;border-radius:4px;flex-shrink:0;border:1px solid rgba(255,255,255,0.3);}
+.preview-label{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text2);}
+
+/* Stats */
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(184,216,240,0.4);}
+.stat-row:last-child{border-bottom:none;}
+.stat-k{font-size:0.72rem;color:var(--text2);}
+.stat-v{font-size:0.75rem;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text);}
+.stat-v.hi{color:var(--gold);}
+.stat-v.grn{color:var(--green);}
+
+/* Pixel count */
+.pixel-counter{background:linear-gradient(135deg,rgba(14,165,233,0.08),rgba(6,182,212,0.05));border:1px solid rgba(14,165,233,0.2);border-radius:8px;padding:10px;text-align:center;}
+.pixel-count-big{font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:800;color:var(--sky3);}
+.pixel-count-label{font-family:'JetBrains Mono',monospace;font-size:0.52rem;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-top:2px;}
+.pixel-total{font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--text3);margin-top:4px;}
+
+/* History */
+.history-list{display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto;}
+.history-item{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:6px;background:var(--surface2);font-size:0.68rem;animation:fadeSlide 0.2s ease;}
+@keyframes fadeSlide{from{opacity:0;transform:translateX(-6px);}to{opacity:1;transform:none;}}
+.h-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.h-xp{font-family:'JetBrains Mono',monospace;font-weight:700;margin-left:auto;}
+.h-xp.j{color:var(--gold);}
+.h-xp.g{color:var(--sky2);}
+.h-xp.ok{color:var(--green);}
+.h-xp.b{color:var(--text3);}
+
+/* CANVAS AREA */
+.canvas-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.canvas-topbar{padding:8px 16px;background:rgba(240,248,255,0.95);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar-left{font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--text3);letter-spacing:1.5px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.zoom-btn{background:var(--surface2);border:1px solid var(--border);border-radius:5px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.9rem;color:var(--text2);transition:all 0.12s;}
+.zoom-btn:hover{border-color:var(--sky2);color:var(--sky2);}
+.zoom-label{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text3);min-width:40px;text-align:center;}
+.coords-display{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text3);min-width:120px;}
+
+.canvas-viewport{flex:1;overflow:auto;cursor:crosshair;background:
+  linear-gradient(45deg,#d4e9f7 25%,transparent 25%),
+  linear-gradient(-45deg,#d4e9f7 25%,transparent 25%),
+  linear-gradient(45deg,transparent 75%,#d4e9f7 75%),
+  linear-gradient(-45deg,transparent 75%,#d4e9f7 75%);
+background-size:16px 16px;
+background-position:0 0,0 8px,8px -8px,-8px 0;}
+.canvas-viewport:active{cursor:cell;}
+
+#pixelCanvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;}
+
+/* TX STATUS BAR */
+.tx-bar{padding:8px 16px;font-size:0.72rem;font-family:'JetBrains Mono',monospace;display:none;align-items:center;gap:8px;border-top:1px solid var(--border);}
+.tx-bar.show{display:flex;}
+.tx-bar.pending{background:rgba(245,158,11,0.06);color:var(--gold);}
+.tx-bar.ok{background:rgba(16,185,129,0.06);color:var(--green);}
+.tx-bar.err{background:rgba(239,68,68,0.06);color:var(--red);}
+.tx-spin{width:11px;height:11px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* XP POPUP */
+.xp-popup{position:fixed;pointer-events:none;font-family:'Sora',sans-serif;font-size:2rem;font-weight:900;color:var(--gold);text-shadow:0 0 20px rgba(245,158,11,0.6);z-index:9998;animation:xpFloat 1.8s ease forwards;}
+@keyframes xpFloat{0%{opacity:0;transform:translateY(0) scale(0.5);}15%{opacity:1;transform:translateY(-20px) scale(1.2);}65%{opacity:1;transform:translateY(-65px) scale(1);}100%{opacity:0;transform:translateY(-110px) scale(0.85);}}
+.confetti-p{position:fixed;pointer-events:none;z-index:9997;border-radius:2px;animation:cfall 1.3s ease forwards;}
+@keyframes cfall{0%{opacity:1;transform:translateY(-10px) rotate(0deg);}100%{opacity:0;transform:translateY(180px) rotate(600deg);}}
+
+/* PENDING PIXEL HIGHLIGHT */
+.pending-glow{position:fixed;pointer-events:none;z-index:200;border:2px solid var(--gold);border-radius:1px;box-shadow:0 0 12px rgba(245,158,11,0.6);animation:pendingPulse 0.7s ease-in-out infinite;}
+@keyframes pendingPulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;z-index:2000;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:10px;font-size:0.8rem;color:var(--text);transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.34,1.3,.64,1);max-width:300px;pointer-events:none;box-shadow:0 4px 18px rgba(56,189,248,0.12);}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-close{margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.95rem;padding:0 0 0 6px;}
+
+/* WALLET MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,30,46,0.55);backdrop-filter:blur(12px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:390px;max-width:95vw;padding:26px;transform:translateY(16px);transition:transform 0.25s cubic-bezier(.34,1.3,.64,1);position:relative;box-shadow:0 20px 60px rgba(14,165,233,0.15);}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-title{font-family:'Sora',sans-serif;font-size:1.25rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--dark);margin-bottom:3px;}
+.modal-sub{font-size:0.76rem;color:var(--text2);margin-bottom:18px;line-height:1.5;}
+.modal-close{position:absolute;top:13px;right:13px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:0.8rem;transition:all 0.12s;}
+.modal-close:hover{border-color:var(--border2);color:var(--text);}
+.wallet-opt{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:7px;cursor:pointer;transition:all 0.12s;background:var(--surface2);}
+.wallet-opt:hover{border-color:var(--sky2);background:rgba(56,189,248,0.06);}
+.wallet-opt-left{display:flex;align-items:center;gap:10px;}
+.wallet-opt-icon{width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0;}
+.wallet-opt-name{font-size:0.85rem;font-weight:600;color:var(--text);}
+.wallet-opt-tag{font-family:'JetBrains Mono',monospace;font-size:0.55rem;padding:2px 6px;border-radius:4px;letter-spacing:1px;}
+.wallet-opt-tag.found{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:var(--green);}
+.wallet-opt-tag.none{background:rgba(120,170,200,0.12);border:1px solid var(--border2);color:var(--text3);}
+
+/* Pixel info tooltip */
+.pixel-tooltip{position:fixed;background:rgba(15,30,46,0.92);border:1px solid var(--border2);border-radius:7px;padding:7px 11px;font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--sky2);pointer-events:none;z-index:500;white-space:nowrap;display:none;}
+
+@media(max-width:768px){
+  .sidebar{width:180px;}
+  .canvas-topbar .coords-display{display:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-fixed"><div class="bg-grid"></div><div class="bg-vignette"></div></div>
+
+<!-- HEADER -->
+<header>
+  <a class="logo" href="index.html">
+    <div class="logo-z">Z</div>
+    <div class="logo-name">Zentryx</div>
+  </a>
+  <div class="header-center">
+    <div class="chain-pill"><div class="chain-live"></div>INK MAINNET</div>
+  </div>
+  <div class="header-right">
+    <a class="back-link" href="ink-chain.html">← Back</a>
+    <button class="wallet-btn" id="walletBtn" onclick="walletBtnClick()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" fill="currentColor"/><path d="M22 11V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2"/></svg>
+      CONNECT
+    </button>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- XP -->
+    <div class="sb-section">
+      <div class="sb-title">Your XP</div>
+      <div class="xp-display">
+        <div class="xp-num" id="xpBig">0</div>
+        <div class="xp-unit">TOTAL XP EARNED</div>
+      </div>
+      <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+    </div>
+
+    <!-- COLOR PALETTE -->
+    <div class="sb-section">
+      <div class="sb-title">Paint Colour</div>
+      <div class="color-grid" id="colorGrid"></div>
+      <div class="color-preview" id="colorPreview">
+        <div class="preview-dot" id="previewDot"></div>
+        <span class="preview-label" id="previewLabel">Select a colour</span>
+      </div>
+    </div>
+
+    <!-- CANVAS STATS -->
+    <div class="sb-section">
+      <div class="sb-title">Canvas</div>
+      <div class="pixel-counter">
+        <div class="pixel-count-big" id="paintedCount">0</div>
+        <div class="pixel-count-label">Pixels Painted</div>
+        <div class="pixel-total">of 100,000 total</div>
+      </div>
+    </div>
+
+    <!-- SESSION STATS -->
+    <div class="sb-section">
+      <div class="sb-title">Session</div>
+      <div class="stat-row"><span class="stat-k">Pixels Placed</span><span class="stat-v" id="stPixels">0</span></div>
+      <div class="stat-row"><span class="stat-k">Best XP</span><span class="stat-v hi" id="stBest">—</span></div>
+      <div class="stat-row"><span class="stat-k">Avg XP</span><span class="stat-v" id="stAvg">—</span></div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="sb-section" style="border-bottom:none;flex:1;">
+      <div class="sb-title">Recent</div>
+      <div class="history-list" id="historyList">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text3);padding:10px 0;text-align:center;">No pixels yet</div>
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+
+  <!-- CANVAS AREA -->
+  <div class="canvas-wrap">
+
+    <!-- Top bar -->
+    <div class="canvas-topbar">
+      <div class="topbar-left">PIXEL PAINTER · INK CHAIN · 1000 × 100 GRID</div>
+      <div class="topbar-right">
+        <span class="coords-display" id="coordsDisplay">Hover over canvas</span>
+        <button class="zoom-btn" onclick="zoom(-1)" title="Zoom out">−</button>
+        <span class="zoom-label" id="zoomLabel">1×</span>
+        <button class="zoom-btn" onclick="zoom(1)" title="Zoom in">+</button>
+        <button class="zoom-btn" onclick="resetView()" title="Reset view" style="width:auto;padding:0 8px;font-size:0.62rem;font-family:'JetBrains Mono',monospace;">FIT</button>
+      </div>
+    </div>
+
+    <!-- Canvas viewport -->
+    <div class="canvas-viewport" id="canvasViewport">
+      <canvas id="pixelCanvas"></canvas>
+    </div>
+
+    <!-- TX bar -->
+    <div class="tx-bar" id="txBar">
+      <div class="tx-spin" id="txSpin" style="display:none"></div>
+      <span id="txMsg"></span>
+    </div>
+
+  </div><!-- /canvas-wrap -->
+
+</div><!-- /main -->
+
+<!-- Pixel tooltip -->
+<div class="pixel-tooltip" id="pixelTooltip"></div>
+
+<!-- WALLET MODAL -->
+<div class="modal-overlay" id="walletModal" onclick="closeModalOuter(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Connect Wallet</div>
+    <div class="modal-sub" id="modalSub">Connect your wallet to paint pixels on Ink Chain and earn XP.</div>
+    <div id="walletList"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toastIcon">📢</span>
+  <span id="toastMsg"></span>
+  <button class="toast-close" onclick="hideToast()">✕</button>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://wbrspewpvzoziqfinpfd.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndicnNwZXdwdnpvemlxZmlucGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNTQ2MjEsImV4cCI6MjA4OTgzMDYyMX0.j_MgjstUKK6K9DnCEcC4ilIocHY3VNCwMNiT47BrBUo';
+
+// ⚠️ Replace with your deployed Ink Chain Pixel Painter contract address
+const CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';
+const PAINT_SELECTOR   = '0xabcd1234'; // paintPixel(uint32 pixelId, uint24 color) selector
+const INK_CHAIN_ID     = '0xdef1';     // 57073 — Ink Mainnet
+
+// Canvas dimensions
+const COLS = 1000;
+const ROWS = 100;
+const TOTAL_PIXELS = COLS * ROWS; // 100,000
+
+// XP rewards pool (weighted: rare = higher xp)
+const XP_POOL = [500, 200, 200, 100, 100, 100, 50, 50, 50, 25, 25, 25];
+
+// 12 Paint colours
+const COLOURS = [
+  { hex:'#ef4444', name:'Red'        },
+  { hex:'#f97316', name:'Orange'     },
+  { hex:'#eab308', name:'Yellow'     },
+  { hex:'#22c55e', name:'Green'      },
+  { hex:'#06b6d4', name:'Cyan'       },
+  { hex:'#3b82f6', name:'Blue'       },
+  { hex:'#8b5cf6', name:'Purple'     },
+  { hex:'#ec4899', name:'Pink'       },
+  { hex:'#f5f5f5', name:'White'      },
+  { hex:'#374151', name:'Dark Grey'  },
+  { hex:'#0f172a', name:'Black'      },
+  { hex:'#fbbf24', name:'Gold'       },
+];
+
+const LEVELS = [0,500,1200,2500,5000,10000,20000,40000,75000,130000,200000];
+
+// ── STATE ─────────────────────────────────────────────────────
+const S = {
+  connected: false,
+  wallet: null,
+  totalXP: 0,
+  pixelsPlaced: 0,
+  bestXP: 0,
+  history: [],
+  selectedColour: null,
+  pendingPixel: null, // {col, row} currently being confirmed
+  busy: false,
+  zoomLevel: 1,
+};
+
+// Pixel data: stores colour hex per pixel index, null = unpainted
+// We use a flat Uint32Array for performance (packed RGB)
+const pixelColors = new Map(); // index -> hex string
+
+// ── CANVAS SETUP ─────────────────────────────────────────────
+const canvas  = document.getElementById('pixelCanvas');
+const ctx     = canvas.getContext('2d');
+const viewport = document.getElementById('canvasViewport');
+
+let PIXEL_SIZE = 8; // base pixel size in screen pixels
+
+function initCanvas() {
+  fitToViewport();
+  renderCanvas();
+}
+
+function fitToViewport() {
+  const vpW = viewport.clientWidth;
+  const vpH = viewport.clientHeight;
+  // Find pixel size that fits both dimensions
+  const sizeW = Math.floor(vpW / COLS);
+  const sizeH = Math.floor(vpH / ROWS);
+  PIXEL_SIZE = Math.max(1, Math.min(sizeW, sizeH));
+  S.zoomLevel = PIXEL_SIZE;
+  document.getElementById('zoomLabel').textContent = PIXEL_SIZE + '×';
+  canvas.width  = COLS * PIXEL_SIZE;
+  canvas.height = ROWS * PIXEL_SIZE;
+}
+
+function renderCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background — light grey for unpainted pixels
+  ctx.fillStyle = '#e8f4fc';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw faint grid lines when zoom >= 4
+  if (PIXEL_SIZE >= 4) {
+    ctx.strokeStyle = 'rgba(176,210,236,0.45)';
+    ctx.lineWidth = 0.5;
+    for (let c = 0; c <= COLS; c++) {
+      ctx.beginPath();
+      ctx.moveTo(c * PIXEL_SIZE, 0);
+      ctx.lineTo(c * PIXEL_SIZE, canvas.height);
+      ctx.stroke();
+    }
+    for (let r = 0; r <= ROWS; r++) {
+      ctx.beginPath();
+      ctx.moveTo(0, r * PIXEL_SIZE);
+      ctx.lineTo(canvas.width, r * PIXEL_SIZE);
+      ctx.stroke();
+    }
+  }
+
+  // Draw painted pixels
+  pixelColors.forEach((hex, idx) => {
+    const col = idx % COLS;
+    const row = Math.floor(idx / COLS);
+    ctx.fillStyle = hex;
+    ctx.fillRect(col * PIXEL_SIZE, row * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+  });
+}
+
+function renderSinglePixel(col, row, hex) {
+  ctx.fillStyle = hex;
+  ctx.fillRect(col * PIXEL_SIZE, row * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+  if (PIXEL_SIZE >= 4) {
+    ctx.strokeStyle = 'rgba(176,210,236,0.45)';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(col * PIXEL_SIZE, row * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+  }
+}
+
+// ── ZOOM ─────────────────────────────────────────────────────
+function zoom(dir) {
+  const sizes = [1, 2, 3, 4, 6, 8, 10, 12, 16];
+  const cur = sizes.indexOf(PIXEL_SIZE);
+  const next = Math.max(0, Math.min(sizes.length - 1, cur + dir));
+  PIXEL_SIZE = sizes[next];
+  S.zoomLevel = PIXEL_SIZE;
+  document.getElementById('zoomLabel').textContent = PIXEL_SIZE + '×';
+  canvas.width  = COLS * PIXEL_SIZE;
+  canvas.height = ROWS * PIXEL_SIZE;
+  renderCanvas();
+}
+
+function resetView() {
+  fitToViewport();
+  renderCanvas();
+  viewport.scrollTo(0, 0);
+}
+
+// ── COLOUR PALETTE ────────────────────────────────────────────
+function buildPalette() {
+  const grid = document.getElementById('colorGrid');
+  grid.innerHTML = '';
+  COLOURS.forEach((c, i) => {
+    const sw = document.createElement('div');
+    sw.className = 'color-swatch';
+    sw.style.background = c.hex;
+    sw.title = c.name;
+    sw.addEventListener('click', () => selectColour(i));
+    grid.appendChild(sw);
+  });
+  selectColour(5); // default: Blue
+}
+
+function selectColour(idx) {
+  S.selectedColour = idx;
+  document.querySelectorAll('.color-swatch').forEach((sw, i) => {
+    sw.classList.toggle('active', i === idx);
+  });
+  const c = COLOURS[idx];
+  document.getElementById('previewDot').style.background = c.hex;
+  document.getElementById('previewLabel').textContent = c.name;
+}
+
+// ── CANVAS INTERACTION ────────────────────────────────────────
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const col = Math.floor(x / PIXEL_SIZE);
+  const row = Math.floor(y / PIXEL_SIZE);
+  if (col >= 0 && col < COLS && row >= 0 && row < ROWS) {
+    document.getElementById('coordsDisplay').textContent = `col ${col + 1}, row ${row + 1}`;
+    const tt = document.getElementById('pixelTooltip');
+    const idx = row * COLS + col;
+    tt.textContent = pixelColors.has(idx)
+      ? `(${col+1}, ${row+1}) · Painted`
+      : `(${col+1}, ${row+1}) · Empty`;
+    tt.style.display = 'block';
+    tt.style.left = (e.clientX + 14) + 'px';
+    tt.style.top  = (e.clientY - 8) + 'px';
+  }
+});
+
+canvas.addEventListener('mouseleave', () => {
+  document.getElementById('pixelTooltip').style.display = 'none';
+  document.getElementById('coordsDisplay').textContent = 'Hover over canvas';
+});
+
+canvas.addEventListener('click', (e) => {
+  if (S.busy) return;
+  if (S.selectedColour === null) { showToast('Select a colour first!', '🎨'); return; }
+
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const col = Math.floor(x / PIXEL_SIZE);
+  const row = Math.floor(y / PIXEL_SIZE);
+  if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return;
+
+  if (!S.connected) {
+    // Show wallet modal with context about which pixel they clicked
+    S.pendingPixel = { col, row };
+    document.getElementById('modalSub').textContent =
+      `Connect your wallet to paint pixel (${col+1}, ${row+1}) on Ink Chain and earn XP.`;
+    openWalletModal();
+    return;
+  }
+
+  paintPixel(col, row);
+});
+
+// ── PAINT PIXEL ───────────────────────────────────────────────
+async function paintPixel(col, row) {
+  if (S.busy) return;
+  if (S.selectedColour === null) { showToast('Select a colour!', '🎨'); return; }
+
+  S.busy = true;
+  S.pendingPixel = { col, row };
+  const colourHex = COLOURS[S.selectedColour].hex;
+
+  // Show pending highlight on canvas
+  showPendingHighlight(col, row);
+  showTX('pending', 'Waiting for wallet confirmation…');
+  document.getElementById('spinBtn_placeholder'); // no-op
+
+  try {
+    // Build pixel ID and color data for the transaction
+    const pixelId = row * COLS + col;
+    const colorInt = parseInt(colourHex.slice(1), 16); // hex to uint24
+
+    const txHash = await window.ethereum.request({
+      method: 'eth_sendTransaction',
+      params: [{
+        from: S.wallet,
+        to: CONTRACT_ADDRESS,
+        value: '0x0',
+        // Encode: paintPixel(uint32 pixelId, uint24 color)
+        data: encodePaintPixel(pixelId, colorInt),
+        chainId: INK_CHAIN_ID,
+        gas: '0x12A00', // ~76k gas
+      }]
+    });
+
+    showTX('pending', 'Confirming on Ink Chain…');
+
+    // Poll for receipt
+    let receipt = null, attempts = 0;
+    while (!receipt && attempts < 40) {
+      await sleep(1100);
+      attempts++;
+      try {
+        receipt = await window.ethereum.request({
+          method: 'eth_getTransactionReceipt',
+          params: [txHash]
+        });
+      } catch(e){}
+    }
+
+    hidePendingHighlight();
+
+    if (!receipt || receipt.status === '0x0') {
+      showTX('err', 'Transaction failed on Ink Chain');
+      setTimeout(hideTX, 3000);
+      S.busy = false;
+      S.pendingPixel = null;
+      return;
+    }
+
+    // ✅ Confirmed — paint the pixel!
+    onPixelConfirmed(col, row, colourHex);
+
+  } catch(e) {
+    hidePendingHighlight();
+    hideTX();
+    if (e.code !== 4001) showToast('Transaction rejected', '❌');
+    S.busy = false;
+    S.pendingPixel = null;
+  }
+}
+
+function encodePaintPixel(pixelId, colorInt) {
+  // ABI encode: paintPixel(uint32,uint24)
+  // selector + padded pixelId + padded color
+  const sel = PAINT_SELECTOR; // 4 bytes
+  const id  = pixelId.toString(16).padStart(64, '0');
+  const col = colorInt.toString(16).padStart(64, '0');
+  return sel + id + col;
+}
+
+function onPixelConfirmed(col, row, colourHex) {
+  const idx = row * COLS + col;
+  const isNew = !pixelColors.has(idx);
+
+  // Store and render
+  pixelColors.set(idx, colourHex);
+  renderSinglePixel(col, row, colourHex);
+
+  // Award random XP
+  const xp = XP_POOL[Math.floor(Math.random() * XP_POOL.length)];
+  S.totalXP += xp;
+  S.pixelsPlaced++;
+  if (xp > S.bestXP) S.bestXP = xp;
+  S.history.unshift({ col, row, hex: colourHex, xp });
+  if (S.history.length > 30) S.history.pop();
+
+  // Effects
+  showXPPop(xp);
+  if (xp >= 200) spawnConfetti();
+  showTX('ok', `✓ Pixel painted! +${xp} XP earned`);
+  setTimeout(hideTX, 3000);
+
+  // Update UI
+  refreshUI();
+  addHistoryItem(col, row, colourHex, xp);
+  updatePaintedCount(isNew);
+  saveData();
+
+  S.busy = false;
+  S.pendingPixel = null;
+
+  // Persist to Supabase
+  syncToSupabase();
+}
+
+// ── PENDING HIGHLIGHT ─────────────────────────────────────────
+let pendingEl = null;
+function showPendingHighlight(col, row) {
+  hidePendingHighlight();
+  const rect = canvas.getBoundingClientRect();
+  const vpRect = viewport.getBoundingClientRect();
+  pendingEl = document.createElement('div');
+  pendingEl.className = 'pending-glow';
+  const x = rect.left + col * PIXEL_SIZE - vpRect.left + viewport.scrollLeft;
+  const y = rect.top  + row * PIXEL_SIZE - vpRect.top  + viewport.scrollTop;
+  // Position relative to viewport for fixed positioning
+  pendingEl.style.cssText = `left:${rect.left + col * PIXEL_SIZE}px;top:${rect.top + row * PIXEL_SIZE}px;width:${PIXEL_SIZE}px;height:${PIXEL_SIZE}px;`;
+  document.body.appendChild(pendingEl);
+}
+function hidePendingHighlight() {
+  if (pendingEl) { pendingEl.remove(); pendingEl = null; }
+}
+
+// ── UI ────────────────────────────────────────────────────────
+function refreshUI() {
+  countUp('xpBig', S.totalXP);
+  document.getElementById('stPixels').textContent = S.pixelsPlaced;
+  document.getElementById('stBest').textContent   = S.bestXP > 0 ? S.bestXP + ' XP' : '—';
+  const avg = S.pixelsPlaced > 0 ? Math.round(S.totalXP / S.pixelsPlaced) : 0;
+  document.getElementById('stAvg').textContent = S.pixelsPlaced > 0 ? avg + ' XP' : '—';
+
+  // XP bar progress
+  let lvl = 0;
+  for (let i = 0; i < LEVELS.length - 1; i++) { if (S.totalXP >= LEVELS[i]) lvl = i; }
+  const cur = LEVELS[lvl] || 0;
+  const nxt = LEVELS[lvl + 1] || cur + 50000;
+  const pct = Math.min(100, ((S.totalXP - cur) / (nxt - cur)) * 100);
+  document.getElementById('xpFill').style.width = pct + '%';
+}
+
+function updatePaintedCount(isNew) {
+  if (!isNew) return;
+  const count = pixelColors.size;
+  document.getElementById('paintedCount').textContent = count.toLocaleString();
+}
+
+function addHistoryItem(col, row, hex, xp) {
+  const list = document.getElementById('historyList');
+  if (S.history.length === 1) list.innerHTML = '';
+  const cls = xp >= 500 ? 'j' : xp >= 200 ? 'g' : xp >= 100 ? 'ok' : 'b';
+  const item = document.createElement('div');
+  item.className = 'history-item';
+  item.innerHTML = `
+    <div class="h-dot" style="background:${hex}"></div>
+    <span style="font-size:0.65rem;color:var(--text2);font-family:'JetBrains Mono',monospace;">(${col+1},${row+1})</span>
+    <span class="h-xp ${cls}">+${xp} XP</span>`;
+  list.insertBefore(item, list.firstChild);
+  while (list.children.length > 20) list.removeChild(list.lastChild);
+}
+
+function countUp(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const start = parseInt(el.textContent.replace(/,/g,''))||0;
+  if (start === target) return;
+  const dur = 600, t0 = performance.now();
+  (function step(now) {
+    const t = Math.min(1,(now-t0)/dur);
+    const e = 1 - Math.pow(1-t,3);
+    el.textContent = Math.round(start+(target-start)*e).toLocaleString();
+    if (t < 1) requestAnimationFrame(step);
+  })(performance.now());
+}
+
+// ── EFFECTS ───────────────────────────────────────────────────
+function showXPPop(xp) {
+  const pop = document.createElement('div');
+  pop.className = 'xp-popup';
+  if (xp === 500) { pop.style.fontSize = '2.6rem'; pop.style.color = '#f59e0b'; }
+  else if (xp >= 200) { pop.style.color = '#0ea5e9'; }
+  else if (xp >= 100) { pop.style.color = '#10b981'; }
+  pop.textContent = '+' + xp + ' XP';
+  pop.style.left = (window.innerWidth / 2 - 50) + 'px';
+  pop.style.top  = (window.innerHeight / 2 - 60) + 'px';
+  document.body.appendChild(pop);
+  setTimeout(() => pop.remove(), 1900);
+}
+
+function spawnConfetti() {
+  const cols = ['#f59e0b','#38bdf8','#10b981','#0ea5e9','#fbbf24','#06b6d4','#ec4899','#8b5cf6'];
+  for (let i = 0; i < 24; i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      p.className = 'confetti-p';
+      p.style.cssText = `left:${window.innerWidth/2+(Math.random()-0.5)*140}px;top:${window.innerHeight/2-20}px;width:${4+Math.random()*5}px;height:${4+Math.random()*5}px;background:${cols[Math.floor(Math.random()*cols.length)]};animation-duration:${0.9+Math.random()*0.7}s;transform:rotate(${Math.random()*360}deg)`;
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 1800);
+    }, i * 22);
+  }
+}
+
+// ── TX BAR ────────────────────────────────────────────────────
+function showTX(type, msg) {
+  const bar  = document.getElementById('txBar');
+  const spin = document.getElementById('txSpin');
+  bar.className = 'tx-bar show ' + type;
+  document.getElementById('txMsg').textContent = msg;
+  spin.style.display = type === 'pending' ? 'block' : 'none';
+}
+function hideTX() { document.getElementById('txBar').className = 'tx-bar'; }
+
+// ── SUPABASE SYNC ─────────────────────────────────────────────
+async function syncToSupabase() {
+  if (!S.wallet) return;
+  const short = S.wallet.slice(0,6) + '...' + S.wallet.slice(-4);
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({
+        wallet: short,
+        total_xp: S.totalXP,
+        games_played: S.pixelsPlaced,
+        chain: 'ink',
+        updated_at: new Date().toISOString()
+      })
+    });
+  } catch(e) { console.warn('Leaderboard sync failed', e); }
+}
+
+// ── LOCAL PERSIST ─────────────────────────────────────────────
+function saveData() {
+  if (!S.wallet) return;
+  try {
+    localStorage.setItem('pp_' + S.wallet.slice(0,10), JSON.stringify({
+      totalXP: S.totalXP, pixelsPlaced: S.pixelsPlaced,
+      bestXP: S.bestXP, history: S.history.slice(0, 20),
+      pixels: [...pixelColors.entries()].slice(0, 5000) // save up to 5k pixels locally
+    }));
+  } catch(e) {}
+}
+
+function loadData() {
+  if (!S.wallet) return;
+  try {
+    const raw = localStorage.getItem('pp_' + S.wallet.slice(0,10));
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    S.totalXP      = d.totalXP || 0;
+    S.pixelsPlaced = d.pixelsPlaced || 0;
+    S.bestXP       = d.bestXP || 0;
+    S.history      = d.history || [];
+    if (d.pixels && d.pixels.length) {
+      d.pixels.forEach(([idx, hex]) => pixelColors.set(idx, hex));
+      renderCanvas();
+      document.getElementById('paintedCount').textContent = pixelColors.size.toLocaleString();
+    }
+    refreshUI();
+    if (S.history.length) {
+      document.getElementById('historyList').innerHTML = '';
+      [...S.history].forEach(h => addHistoryItem(h.col, h.row, h.hex, h.xp));
+    }
+  } catch(e) {}
+}
+
+// ── WALLET ────────────────────────────────────────────────────
+const WALLETS = [
+  { name:'Rabby Wallet',    icon:'https://raw.githubusercontent.com/RabbyHub/Rabby/develop/src/assets/images/icon-128.png', detect:()=>!!(window.ethereum?.isRabby), install:'https://rabby.io' },
+  { name:'MetaMask',        icon:'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg', detect:()=>!!(window.ethereum?.isMetaMask&&!window.ethereum?.isRabby), install:'https://metamask.io' },
+  { name:'Coinbase Wallet', icon:`data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230052ff'/><circle cx='50' cy='50' r='35' fill='white'/><circle cx='50' cy='50' r='22' fill='%230052ff'/></svg>`, detect:()=>!!(window.ethereum?.isCoinbaseWallet), install:'https://www.coinbase.com/wallet' },
+  { name:'Other EVM Wallet',icon:`data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23627eea'/><text y='.9em' font-size='70' x='10'>🌐</text></svg>`, detect:()=>!!(window.ethereum), install:null },
+];
+
+function openWalletModal() {
+  buildWalletList();
+  document.getElementById('walletModal').classList.add('open');
+}
+function closeModal() { document.getElementById('walletModal').classList.remove('open'); }
+function closeModalOuter(e) { if (e.target.id === 'walletModal') closeModal(); }
+
+function buildWalletList() {
+  const el = document.getElementById('walletList');
+  el.innerHTML = '';
+  WALLETS.forEach(w => {
+    const found = w.detect();
+    const div = document.createElement('div');
+    div.className = 'wallet-opt';
+    div.innerHTML = `
+      <div class="wallet-opt-left">
+        <img src="${w.icon}" class="wallet-opt-icon" style="background:#f0f8ff;border:1px solid #b8d8f0;padding:3px;border-radius:7px;" onerror="this.style.display='none'"/>
+        <div class="wallet-opt-name">${w.name}</div>
+      </div>
+      <span class="wallet-opt-tag ${found?'found':'none'}">${found?'● Detected':w.install?'Install':'—'}</span>`;
+    div.onclick = () => {
+      if (found) connectWallet();
+      else if (w.install) window.open(w.install, '_blank');
+      else connectWallet();
+    };
+    el.appendChild(div);
+  });
+}
+
+async function connectWallet() {
+  if (!window.ethereum) { showToast('No wallet detected.', '⚠️'); return; }
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    S.wallet = accounts[0]; S.connected = true;
+    // Switch to Ink chain
+    try {
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: INK_CHAIN_ID }] });
+    } catch(sw) {
+      if (sw.code === 4902) {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{ chainId: INK_CHAIN_ID, chainName: 'Ink Mainnet',
+            nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+            rpcUrls: ['https://rpc-qnd.inkonchain.com'],
+            blockExplorerUrls: ['https://explorer.inkonchain.com'] }]
+        });
+      }
+    }
+    closeModal();
+    onConnected();
+  } catch(e) { console.error(e); }
+}
+
+function walletBtnClick() {
+  if (S.connected) {
+    // Disconnect
+    S.connected = false; S.wallet = null; S.totalXP = 0;
+    S.pixelsPlaced = 0; S.bestXP = 0; S.history = [];
+    pixelColors.clear();
+    renderCanvas();
+    document.getElementById('paintedCount').textContent = '0';
+    document.getElementById('historyList').innerHTML = '<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.62rem;color:var(--text3);padding:10px 0;text-align:center;">No pixels yet</div>';
+    const btn = document.getElementById('walletBtn');
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" fill="currentColor"/><path d="M22 11V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2"/></svg> CONNECT`;
+    btn.classList.remove('connected');
+    refreshUI();
+  } else {
+    document.getElementById('modalSub').textContent = 'Connect your wallet to paint pixels on Ink Chain and earn XP.';
+    openWalletModal();
+  }
+}
+
+async function onConnected() {
+  const btn = document.getElementById('walletBtn');
+  btn.innerHTML = `✓ ${S.wallet.slice(0,6)}...${S.wallet.slice(-4)}`;
+  btn.classList.add('connected');
+  loadData();
+  refreshUI();
+  // If they clicked a pixel before connecting, paint it now
+  if (S.pendingPixel) {
+    const { col, row } = S.pendingPixel;
+    S.pendingPixel = null;
+    await sleep(400);
+    paintPixel(col, row);
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, icon = '📢') {
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastIcon').textContent = icon;
+  document.getElementById('toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => document.getElementById('toast').classList.remove('show'), 4000);
+}
+function hideToast() { document.getElementById('toast').classList.remove('show'); }
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── INIT ──────────────────────────────────────────────────────
+buildPalette();
+window.addEventListener('resize', () => { fitToViewport(); renderCanvas(); });
+// Wait for layout then init
+requestAnimationFrame(() => { requestAnimationFrame(initCanvas); });
+</script>
+</body>
+</html>
