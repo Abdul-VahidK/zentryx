@@ -458,7 +458,7 @@ header::after {
   <div class="header-center">
     <div class="chain-pill">
       <div class="chain-live"></div>
-      BASE MAINNET
+      BASE SEPOLIA
     </div>
   </div>
 
@@ -653,7 +653,7 @@ const CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';
 // Function selector for roll() — update when contract deployed
 const ROLL_SELECTOR = '0x1234abcd';
 // Base Chain ID
-const BASE_CHAIN_ID = '0x2105'; // 8453 in hex — Base Mainnet
+const BASE_CHAIN_ID = '0x14A34'; // 84532 in hex — Base Sepolia Testnet
 
 const LEVELS = [0,200,500,1000,2000,4000,8000,15000,28000,50000,90000,150000,250000,400000,650000];
 
@@ -1109,10 +1109,10 @@ async function connectWallet() {
       if (sw.code === 4902) {
         await window.ethereum.request({
           method:'wallet_addEthereumChain',
-          params:[{ chainId: BASE_CHAIN_ID, chainName:'Base Mainnet',
+          params:[{ chainId: BASE_CHAIN_ID, chainName:'Base Sepolia Testnet',
             nativeCurrency:{name:'ETH',symbol:'ETH',decimals:18},
-            rpcUrls:['https://mainnet.base.org'],
-            blockExplorerUrls:['https://basescan.org'] }]
+            rpcUrls:['https://sepolia.base.org'],
+            blockExplorerUrls:['https://sepolia.basescan.org'] }]
         });
       }
     }
