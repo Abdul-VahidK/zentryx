@@ -390,7 +390,7 @@ header::after {
   <div class="header-center">
     <div class="chain-pill">
       <div class="chain-live"></div>
-      INK MAINNET
+      INK SEPOLIA
     </div>
   </div>
 
@@ -546,7 +546,7 @@ const CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';
 // Function selector for spin() — update when contract deployed
 const SPIN_SELECTOR = '0x9abc1234';
 // Ink Chain ID
-const INK_CHAIN_ID = '0xdef1'; // 57073 in hex — Ink Mainnet
+const INK_CHAIN_ID = '0xBA5ED'; // 763373 in hex — Ink Sepolia Testnet
 
 const LEVELS = [0,200,500,1000,2000,4000,8000,15000,28000,50000,90000,150000,250000,400000,650000];
 
@@ -989,10 +989,10 @@ async function connectWallet() {
       if (sw.code === 4902) {
         await window.ethereum.request({
           method:'wallet_addEthereumChain',
-          params:[{ chainId: INK_CHAIN_ID, chainName:'Ink Mainnet',
+          params:[{ chainId: INK_CHAIN_ID, chainName:'Ink Sepolia Testnet',
             nativeCurrency:{name:'ETH',symbol:'ETH',decimals:18},
-            rpcUrls:['https://rpc-qnd.inkonchain.com'],
-            blockExplorerUrls:['https://explorer.inkonchain.com'] }]
+            rpcUrls:['https://rpc-gel-sepolia.inkonchain.com'],
+            blockExplorerUrls:['https://explorer-sepolia.inkonchain.com'] }]
         });
       }
     }
