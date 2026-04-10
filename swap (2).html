@@ -1,0 +1,2138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P2P Swap — Zentryx Web3 Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Sora:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#dff0fa;--surface:#f5fbff;--surface2:#f0f8ff;--surface3:#e0f0fb;--border-color:#b8d8f0;--sky:#38bdf8;--sky2:#0ea5e9;--sky3:#0284c7;--cyan:#06b6d4;--gold:#f59e0b;--green:#10b981;--red:#ef4444;--text:#0f2a3f;--text2:#3a6080;--text3:#7aaac8}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes chipIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.bg-fixed{position:fixed;inset:0;z-index:0;pointer-events:none}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(56,189,248,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.12) 1px,transparent 1px);background-size:60px 60px}
+.bg-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 30%,rgba(186,230,255,.25) 100%)}
+.bg-glow-bl{position:absolute;bottom:-120px;left:-80px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(56,189,248,.2) 0%,rgba(56,189,248,.06) 45%,transparent 70%)}
+.bg-glow-tr{position:absolute;top:-80px;right:-80px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(14,165,233,.15) 0%,transparent 65%)}
+header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:64px;background:rgba(245,251,255,.95);border-bottom:1px solid var(--border-color);box-shadow:0 2px 16px rgba(56,189,248,.1);backdrop-filter:blur(20px)}
+header::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--sky),var(--sky2),transparent);opacity:.8}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,#e0f4ff,#fff);border:1.5px solid var(--cyan);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:900;color:var(--cyan);box-shadow:0 0 16px rgba(0,238,255,.3)}
+.logo-name{font-family:'Sora',sans-serif;font-size:1.45rem;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--text)}
+.logo-sub{display:block;font-family:'JetBrains Mono',monospace;font-size:.5rem;letter-spacing:2px;color:var(--sky2);opacity:.8;text-transform:uppercase;margin-top:2px}
+nav a{padding:6px 14px;font-family:'Sora',sans-serif;font-size:.9rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;color:var(--text2);border-radius:3px;transition:all .15s}
+nav a:hover,nav a.active{color:var(--sky3);background:rgba(56,189,248,.1)}
+.net-badge{display:flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid var(--border-color);border-radius:3px;background:rgba(56,189,248,.08);font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:1px;color:var(--sky3)}
+.net-dot{width:6px;height:6px;border-radius:50%;background:var(--sky2);box-shadow:0 0 6px var(--sky2);animation:pulse 2s infinite}
+.wallet-btn{padding:8px 20px;background:linear-gradient(135deg,var(--sky2),var(--sky3));border:none;border-radius:6px;font-family:'Sora',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;cursor:pointer;transition:all .15s}
+.wallet-btn:hover{transform:translateY(-1px);box-shadow:0 0 20px rgba(56,189,248,.4)}
+.wallet-btn.connected{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--green)}
+.header-right{display:flex;align-items:center;gap:10px}
+main{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:24px 20px 60px}
+#screen-trade{display:none;grid-template-columns:1fr 340px;gap:16px;align-items:start;animation:fadeUp .3s ease}
+.trade-topbar{background:var(--surface);border:1px solid var(--border-color);border-radius:12px;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+.peer-avatar{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,var(--sky2),var(--cyan));display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-size:.9rem;font-weight:800;color:#fff}
+.peer-name{font-family:'Sora',sans-serif;font-size:.9rem;font-weight:800;letter-spacing:2px;color:var(--text)}
+.peer-status{display:flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:1px}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite}
+.phase-badge{padding:5px 14px;border-radius:20px;font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;background:rgba(14,165,233,.1);border:1px solid rgba(14,165,233,.3);color:var(--sky3)}
+.cancel-btn{padding:7px 16px;background:transparent;border:1px solid rgba(239,68,68,.3);border-radius:6px;font-family:'Sora',sans-serif;font-size:.78rem;font-weight:600;color:var(--red);cursor:pointer}
+.trade-panels{background:var(--surface);border:1px solid var(--border-color);border-radius:12px;overflow:hidden;display:grid;grid-template-columns:1fr 56px 1fr;margin-bottom:12px}
+.panel-header{padding:12px 16px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;background:rgba(240,248,255,.6)}
+.panel-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:2px;color:var(--text3);text-transform:uppercase}
+.panel-who{display:flex;align-items:center;gap:6px}
+.panel-dot{width:8px;height:8px;border-radius:50%}
+.panel-name{font-family:'Sora',sans-serif;font-size:.72rem;font-weight:700;color:var(--text2)}
+.panel-body{min-height:220px;padding:12px;display:flex;flex-direction:column;gap:7px}
+.empty-msg{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:.4;padding:20px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:1px;color:var(--text3)}
+.middle-col{display:flex;align-items:center;justify-content:center;border-left:1px solid var(--border-color);border-right:1px solid var(--border-color);background:rgba(240,248,255,.4);font-size:1.2rem}
+.asset-chip{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--surface2);border:1px solid var(--border-color);border-radius:8px;animation:chipIn .2s ease}
+.asset-chip .emoji{font-size:1.3rem}
+.asset-info{flex:1}
+.asset-name{font-size:.8rem;font-weight:700;color:var(--text)}
+.asset-val{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text3)}
+.rm-btn{width:22px;height:22px;border-radius:50%;background:rgba(239,68,68,.1);border:none;color:var(--red);cursor:pointer;font-size:.7rem}
+.confirm-row{background:var(--surface);border:1px solid var(--border-color);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:16px;margin-bottom:12px}
+.confirm-side{flex:1;display:flex;align-items:center;gap:10px}
+.confirm-circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0}
+.confirm-text{font-size:.8rem;color:var(--text2)}
+.confirm-btn{padding:11px 28px;border:none;border-radius:10px;font-family:'Sora',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--green),#059669);white-space:nowrap;transition:all .2s}
+.confirm-btn:disabled{background:var(--surface3);color:var(--text3);cursor:not-allowed}
+.trade-locked{pointer-events:none;opacity:0.35;user-select:none}
+.trade-locked-msg{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:2px;color:var(--text3);padding:10px 0 4px;text-transform:uppercase}
+.inventory-panel{background:var(--surface);border:1px solid var(--border-color);border-radius:12px;padding:16px}
+.inv-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-color)}
+.inv-item{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--surface2);border:1px solid var(--border-color);border-radius:8px;cursor:pointer;margin-bottom:7px;transition:border-color .15s}
+.inv-item:hover{border-color:var(--sky2)}
+.inv-name{font-size:.78rem;font-weight:700;color:var(--text)}
+.inv-meta{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--text3)}
+.add-btn{padding:3px 8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);border-radius:4px;font-size:.6rem;color:var(--sky3);cursor:pointer;font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.copy-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(14,165,233,.1);border:1px solid rgba(14,165,233,.3);border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:1px;color:var(--sky3);cursor:pointer;transition:all .15s}
+.copy-btn.copied{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.3);color:var(--green)}
+.connect-btn{padding:8px 18px;border:none;border-radius:8px;font-family:'Sora',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.connect-btn.gen-ready{background:linear-gradient(135deg,var(--sky2),var(--sky3));color:#fff}
+
+/* WALLET MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(186,230,255,0.3);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:1px solid var(--border-color);border-radius:16px;width:400px;max-width:95vw;padding:28px;transform:translateY(16px);transition:transform 0.25s cubic-bezier(.34,1.3,.64,1);position:relative;box-shadow:0 20px 60px rgba(56,189,248,0.2)}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-title{font-family:'Sora',sans-serif;font-size:1.3rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#0c1e30;margin-bottom:4px}
+.modal-sub{font-size:0.78rem;color:var(--text2);margin-bottom:20px}
+.modal-close{position:absolute;top:14px;right:14px;background:var(--surface2);border:1px solid var(--border-color);border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:0.9rem;transition:all 0.12s}
+.modal-close:hover{color:#0c1e30;border-color:var(--sky2)}
+.wopt{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border:1px solid var(--border-color);border-radius:8px;margin-bottom:7px;cursor:pointer;background:var(--surface2);transition:all 0.12s}
+.wopt:hover{border-color:var(--sky2);background:rgba(56,189,248,0.06);transform:translateX(2px)}
+.wopt-l{display:flex;align-items:center;gap:11px}
+.wopt-ic{width:33px;height:33px;border-radius:8px;object-fit:cover;background:#eaf4ff;border:1px solid var(--border-color);padding:4px;flex-shrink:0}
+.wopt-n{font-size:0.87rem;font-weight:600;color:#0c1e30}
+.wopt-hint{font-size:0.65rem;color:var(--text3);margin-top:2px}
+.wtag{font-family:'JetBrains Mono',monospace;font-size:0.56rem;padding:2px 7px;border-radius:4px;letter-spacing:1px;white-space:nowrap}
+.wtag.y{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:var(--green)}
+.wtag.n{background:rgba(120,170,200,0.15);border:1px solid var(--border-color);color:var(--text3)}
+
+/* ── PEER CONNECT PANEL ──────────────────────────── */
+.peer-connect-card {
+  background:var(--surface);border:1px solid var(--border-color);
+  border-radius:12px;padding:20px 28px;
+  display:grid;grid-template-columns:1fr auto 1fr;gap:0;
+  align-items:center;margin-bottom:12px;
+  box-shadow:0 4px 20px rgba(56,189,248,0.08);
+}
+.pc-divider { width:1px;height:60px;background:var(--border-color);margin:0 28px; }
+.pc-label { font-family:'JetBrains Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:8px; }
+.pc-mycode { font-family:'Sora',sans-serif;font-size:1.8rem;font-weight:900;color:var(--sky3);letter-spacing:6px;margin-bottom:4px; }
+.pc-hint { font-size:0.72rem;color:var(--text3); }
+.pc-input {
+  width:100%;padding:10px 14px;
+  background:var(--surface2);border:1.5px solid var(--border-color);
+  border-radius:8px;font-family:'Sora',sans-serif;
+  font-size:1.1rem;font-weight:700;letter-spacing:4px;text-transform:uppercase;
+  color:var(--text);outline:none;margin-bottom:10px;transition:border-color .15s;
+}
+.pc-input:focus { border-color:var(--sky2); }
+.pc-input::placeholder { color:var(--text3);font-size:0.9rem;letter-spacing:2px; }
+.pc-btn {
+  width:100%;padding:11px;
+  background:linear-gradient(135deg,var(--sky2),var(--sky3));
+  border:none;border-radius:8px;
+  font-family:'Sora',sans-serif;font-size:0.88rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;color:#fff;
+  cursor:pointer;transition:all .15s;
+}
+.pc-btn:hover { transform:translateY(-1px);box-shadow:0 0 20px rgba(56,189,248,.4); }
+.pc-btn:disabled { background:var(--surface3);color:var(--text3);cursor:not-allowed;transform:none;box-shadow:none; }
+/* Incoming request popup */
+.request-popup {
+  position:fixed;bottom:28px;right:28px;z-index:500;
+  background:var(--surface);border:1px solid var(--border-color);
+  border-radius:14px;padding:20px 24px;
+  box-shadow:0 8px 40px rgba(56,189,248,0.2);
+  max-width:320px;
+  animation:fadeUp .3s ease;
+  display:none;
+}
+.request-popup.show { display:block; }
+.rp-title { font-family:'Sora',sans-serif;font-size:0.75rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--sky3);margin-bottom:4px; }
+.rp-msg { font-size:0.85rem;color:var(--text2);margin-bottom:16px;line-height:1.5; }
+.rp-addr { font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text);font-weight:600;margin-bottom:16px; }
+.rp-btns { display:flex;gap:8px; }
+.rp-accept { flex:1;padding:9px;background:linear-gradient(135deg,var(--green),#059669);border:none;border-radius:8px;font-family:'Sora',sans-serif;font-size:0.82rem;font-weight:700;color:#fff;cursor:pointer;transition:all .15s; }
+.rp-accept:hover { transform:translateY(-1px); }
+.rp-reject { flex:1;padding:9px;background:transparent;border:1px solid rgba(239,68,68,.3);border-radius:8px;font-family:'Sora',sans-serif;font-size:0.82rem;font-weight:700;color:var(--red);cursor:pointer; }
+
+
+/* ── CHAT PANEL ─────────────────────────────────────── */
+.chat-panel {
+  background:var(--surface);
+  border:1px solid var(--border-color);
+  border-radius:12px;
+  display:flex;flex-direction:column;
+  height:520px;
+  overflow:hidden;
+}
+.chat-header {
+  padding:12px 16px;
+  border-bottom:1px solid var(--border-color);
+  background:rgba(240,248,255,.6);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.chat-title {
+  font-family:'JetBrains Mono',monospace;
+  font-size:.6rem;letter-spacing:2px;
+  color:var(--text3);text-transform:uppercase;
+}
+.chat-online {
+  display:flex;align-items:center;gap:5px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.58rem;color:var(--green);
+}
+.chat-online-dot {
+  width:6px;height:6px;border-radius:50%;
+  background:var(--green);box-shadow:0 0 5px var(--green);
+  animation:pulse 2s infinite;
+}
+.chat-messages {
+  flex:1;overflow-y:auto;
+  padding:12px;
+  display:flex;flex-direction:column;gap:8px;
+  scroll-behavior:smooth;
+}
+.chat-messages::-webkit-scrollbar { width:4px; }
+.chat-messages::-webkit-scrollbar-track { background:transparent; }
+.chat-messages::-webkit-scrollbar-thumb { background:var(--border-color);border-radius:4px; }
+.chat-empty {
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:8px;opacity:.4;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.6rem;letter-spacing:1px;color:var(--text3);
+  text-align:center;
+}
+/* Message bubbles */
+.chat-msg {
+  display:flex;flex-direction:column;
+  max-width:85%;
+  animation:fadeUp .2s ease;
+}
+.chat-msg.mine { align-self:flex-end;align-items:flex-end; }
+.chat-msg.theirs { align-self:flex-start;align-items:flex-start; }
+.chat-bubble {
+  padding:8px 12px;border-radius:12px;
+  font-size:.82rem;line-height:1.45;word-break:break-word;
+}
+.chat-msg.mine .chat-bubble {
+  background:linear-gradient(135deg,var(--sky2),var(--sky3));
+  color:#fff;border-bottom-right-radius:3px;
+}
+.chat-msg.theirs .chat-bubble {
+  background:var(--surface2);
+  border:1px solid var(--border-color);
+  color:var(--text);border-bottom-left-radius:3px;
+}
+.chat-meta {
+  font-family:'JetBrains Mono',monospace;
+  font-size:.52rem;color:var(--text3);
+  margin-top:3px;padding:0 3px;
+}
+/* System messages */
+.chat-system {
+  text-align:center;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.58rem;letter-spacing:1px;
+  color:var(--text3);padding:4px 0;
+}
+/* Input row */
+.chat-input-row {
+  display:flex;gap:8px;padding:10px 12px;
+  border-top:1px solid var(--border-color);
+  flex-shrink:0;
+  background:var(--surface);
+}
+.chat-input {
+  flex:1;padding:8px 12px;
+  background:var(--surface2);
+  border:1.5px solid var(--border-color);
+  border-radius:8px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:.82rem;color:var(--text);
+  outline:none;resize:none;
+  transition:border-color .15s;
+  min-height:36px;max-height:80px;
+}
+.chat-input:focus { border-color:var(--sky2); }
+.chat-input::placeholder { color:var(--text3); }
+.chat-send-btn {
+  width:36px;height:36px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--sky2),var(--sky3));
+  border:none;border-radius:8px;
+  color:#fff;font-size:1rem;
+  cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;justify-content:center;
+}
+.chat-send-btn:hover { transform:translateY(-1px);box-shadow:0 0 14px rgba(56,189,248,.4); }
+.chat-send-btn:disabled { background:var(--surface3);color:var(--text3);cursor:not-allowed;transform:none; }
+.chat-locked-msg {
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:8px;opacity:.5;padding:20px;text-align:center;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.6rem;letter-spacing:1px;color:var(--text3);
+}
+
+
+/* Lock button */
+.lock-btn {
+  padding:9px 20px;
+  background:linear-gradient(135deg,var(--sky2),var(--sky3));
+  border:none;border-radius:8px;
+  font-family:'Sora',sans-serif;font-size:.85rem;font-weight:700;
+  letter-spacing:.5px;color:#fff;cursor:pointer;
+  transition:all .15s;white-space:nowrap;flex-shrink:0;
+}
+.lock-btn:hover { transform:translateY(-1px);box-shadow:0 0 18px rgba(56,189,248,.4); }
+.lock-btn.locked {
+  background:rgba(16,185,129,.12);
+  border:1.5px solid rgba(16,185,129,.4);
+  color:var(--green);cursor:default;
+  transform:none;box-shadow:none;
+}
+.lock-btn:disabled { background:var(--surface3);color:var(--text3);cursor:not-allowed;transform:none; }
+
+
+.cancel-trade-btn {
+  padding:9px 18px;
+  background:transparent;
+  border:1px solid rgba(239,68,68,.35);
+  border-radius:8px;
+  font-family:'Sora',sans-serif;font-size:.85rem;font-weight:700;
+  color:var(--red);cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.cancel-trade-btn:hover { background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.6); }
+/* ── CLAIM PANEL ────────────────────────────────────── */
+.claim-panel {
+  background:var(--surface);border:1.5px solid rgba(16,185,129,.35);
+  border-radius:12px;overflow:hidden;
+  box-shadow:0 4px 28px rgba(16,185,129,.12);
+  animation:fadeUp .3s ease;
+}
+.claim-header {
+  padding:16px 20px 14px;
+  background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(5,150,105,.04));
+  border-bottom:1px solid rgba(16,185,129,.2);
+}
+.claim-title {
+  display:flex;align-items:center;gap:8px;
+  font-family:'Sora',sans-serif;font-size:1.05rem;font-weight:800;
+  color:var(--green);letter-spacing:.5px;margin-bottom:4px;
+}
+.claim-sub {
+  font-size:.75rem;color:var(--text2);line-height:1.4;
+}
+.claim-items {
+  padding:14px;display:flex;flex-direction:column;gap:8px;
+}
+.claim-item-row {
+  display:flex;align-items:center;gap:11px;
+  padding:11px 13px;
+  background:var(--surface2);border:1px solid rgba(16,185,129,.2);
+  border-radius:8px;
+}
+.claim-item-emoji { font-size:1.4rem;flex-shrink:0; }
+.claim-item-info { flex:1; }
+.claim-item-name {
+  font-family:'Sora',sans-serif;font-size:.82rem;font-weight:700;color:var(--text);
+}
+.claim-item-meta {
+  font-family:'JetBrains Mono',monospace;font-size:.55rem;
+  color:var(--text3);margin-top:2px;
+}
+.claim-item-badge {
+  font-family:'JetBrains Mono',monospace;font-size:.5rem;
+  padding:2px 7px;border-radius:3px;letter-spacing:1px;flex-shrink:0;
+}
+.claim-item-badge.nft  { background:rgba(14,165,233,.1);border:1px solid rgba(14,165,233,.3);color:var(--sky2); }
+.claim-item-badge.coin { background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--gold); }
+.claim-footer {
+  display:flex;align-items:center;gap:14px;
+  padding:12px 16px;border-top:1px solid rgba(16,185,129,.15);
+  background:rgba(16,185,129,.03);
+}
+.claim-hint {
+  flex:1;font-size:.75rem;color:var(--text2);line-height:1.4;
+}
+.claim-btn {
+  padding:11px 28px;
+  background:linear-gradient(135deg,var(--green),#059669);
+  border:none;border-radius:8px;
+  font-family:'Sora',sans-serif;font-size:.9rem;font-weight:700;
+  letter-spacing:.5px;color:#fff;cursor:pointer;
+  transition:all .2s;white-space:nowrap;flex-shrink:0;
+}
+.claim-btn:hover { transform:translateY(-1px);box-shadow:0 0 20px rgba(16,185,129,.35); }
+.claim-btn:disabled { background:var(--surface3);color:var(--text3);cursor:not-allowed;transform:none;box-shadow:none; }
+.claim-btn.claimed {
+  background:rgba(16,185,129,.1);border:1.5px solid rgba(16,185,129,.4);
+  color:var(--green);cursor:default;
+}
+.claim-receipt {
+  margin:0 14px 14px;padding:14px 16px;
+  background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25);
+  border-radius:8px;
+}
+.claim-receipt-title {
+  font-family:'Sora',sans-serif;font-size:.8rem;font-weight:700;
+  color:var(--green);margin-bottom:10px;
+}
+.claim-receipt-row {
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:'JetBrains Mono',monospace;font-size:.58rem;
+  color:var(--text2);padding:4px 0;border-bottom:1px solid rgba(16,185,129,.1);
+}
+.claim-receipt-row:last-child { border-bottom:none; }
+.claim-receipt-val { color:var(--text);font-weight:700; }
+.claim-tx-link {
+  display:inline-flex;align-items:center;gap:5px;margin-top:10px;
+  padding:5px 12px;border-radius:5px;font-size:.6rem;font-family:'JetBrains Mono',monospace;
+  background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);
+  color:var(--sky3);text-decoration:none;transition:all .15s;
+}
+.claim-tx-link:hover { background:rgba(56,189,248,.18); }
+.claim-evm-warning {
+  font-family:'JetBrains Mono',monospace;font-size:.58rem;
+  color:var(--gold);padding:8px 12px;margin:0 14px 14px;
+  background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);
+  border-radius:6px;line-height:1.5;
+}
+
+/* ── PEER DETAILS PANEL ─────────────────────────────── */
+.peer-details-panel {
+  background:var(--surface);border:1px solid var(--border-color);
+  border-radius:12px;overflow:hidden;
+}
+.pdp-header {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 16px;background:rgba(240,248,255,.7);
+  border-bottom:1px solid var(--border-color);
+}
+.pdp-title {
+  display:flex;align-items:center;gap:7px;
+  font-family:'JetBrains Mono',monospace;font-size:.6rem;
+  letter-spacing:2px;color:var(--text2);text-transform:uppercase;font-weight:700;
+}
+.pdp-live {
+  display:flex;align-items:center;gap:5px;
+  font-family:'JetBrains Mono',monospace;font-size:.55rem;
+  letter-spacing:1px;color:var(--green);
+}
+.pdp-live-dot {
+  width:6px;height:6px;border-radius:50%;
+  background:var(--green);box-shadow:0 0 5px var(--green);
+  animation:pulse 2s infinite;
+}
+.pdp-empty {
+  padding:28px;text-align:center;
+  font-family:'JetBrains Mono',monospace;font-size:.6rem;
+  letter-spacing:1px;color:var(--text3);opacity:.5;
+}
+.pdp-grid {
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:10px;padding:12px;
+}
+.pdp-card {
+  background:var(--surface2);border:1px solid var(--border-color);
+  border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px;
+  transition:border-color .15s;
+}
+.pdp-card:hover { border-color:var(--sky2); }
+.pdp-card-top {
+  display:flex;align-items:center;gap:11px;
+}
+.pdp-thumb {
+  width:44px;height:44px;border-radius:6px;
+  background:linear-gradient(135deg,var(--surface3),var(--bg2));
+  border:1px solid var(--border-color);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.6rem;flex-shrink:0;
+}
+.pdp-name {
+  font-family:'Sora',sans-serif;font-size:.82rem;font-weight:700;color:var(--text);
+}
+.pdp-collection {
+  font-family:'JetBrains Mono',monospace;font-size:.55rem;
+  letter-spacing:1px;color:var(--text3);margin-top:2px;
+}
+.pdp-badges { display:flex;gap:5px;flex-wrap:wrap;margin-top:4px; }
+.pdp-badge {
+  font-family:'JetBrains Mono',monospace;font-size:.5rem;
+  padding:2px 7px;border-radius:3px;letter-spacing:1px;
+}
+.pdp-badge.chain { background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);color:var(--sky3); }
+.pdp-badge.type-nft { background:rgba(14,165,233,.1);border:1px solid rgba(14,165,233,.3);color:var(--sky2); }
+.pdp-badge.type-coin { background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--gold); }
+.pdp-stats {
+  display:grid;grid-template-columns:1fr 1fr;gap:6px;
+}
+.pdp-stat {
+  background:var(--surface3);border:1px solid var(--border-color);
+  border-radius:5px;padding:7px 9px;
+}
+.pdp-stat-label {
+  font-family:'JetBrains Mono',monospace;font-size:.48rem;
+  letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:3px;
+}
+.pdp-stat-val {
+  font-family:'Sora',sans-serif;font-size:.82rem;font-weight:700;color:var(--text);
+}
+.pdp-stat-val.loading {
+  color:var(--text3);font-size:.7rem;font-weight:400;
+  animation:pulse 1.5s infinite;
+}
+.pdp-stat-val.rarity-legendary { color:#f59e0b; }
+.pdp-stat-val.rarity-rare { color:var(--sky2); }
+.pdp-stat-val.rarity-uncommon { color:var(--green); }
+.pdp-links {
+  display:flex;gap:6px;flex-wrap:wrap;padding-top:4px;
+  border-top:1px solid var(--border-color);
+}
+.pdp-link {
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:5px;
+  font-family:'JetBrains Mono',monospace;font-size:.55rem;
+  letter-spacing:.5px;text-decoration:none;
+  border:1px solid var(--border-color);color:var(--text2);
+  background:var(--surface);transition:all .15s;
+}
+.pdp-link:hover { border-color:var(--sky2);color:var(--sky3);background:rgba(56,189,248,.06); }
+.pdp-link-icon { width:13px;height:13px;border-radius:2px;object-fit:contain; }
+
+/* Chain selector pills */
+.chain-scroll {
+  display:flex;gap:5px;flex-wrap:wrap;
+}
+.chain-pill {
+  padding:4px 10px;
+  background:var(--surface2);border:1px solid var(--border-color);
+  border-radius:20px;font-family:'JetBrains Mono',monospace;
+  font-size:.58rem;letter-spacing:.5px;color:var(--text2);
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.chain-pill:hover:not(.active) { border-color:var(--sky2);color:var(--sky3); }
+.chain-pill.active {
+  background:rgba(14,165,233,.12);border-color:var(--sky2);
+  color:var(--sky3);font-weight:700;
+}
+
+/* Inventory type toggle */
+.inv-type-btn {
+  flex:1;padding:7px 0;
+  background:var(--surface2);border:1px solid var(--border-color);
+  border-radius:6px;font-family:'Sora',sans-serif;font-size:.75rem;font-weight:700;
+  letter-spacing:.5px;color:var(--text2);cursor:pointer;transition:all .15s;
+}
+.inv-type-btn.active {
+  background:linear-gradient(135deg,var(--sky2),var(--sky3));
+  border-color:var(--sky2);color:#fff;
+  box-shadow:0 2px 10px rgba(14,165,233,.3);
+}
+.inv-type-btn:hover:not(.active) { border-color:var(--sky2);color:var(--sky3); }
+
+</style>
+</head>
+<body>
+
+<div class="bg-fixed">
+  <div class="bg-grid"></div>
+  <div class="bg-vignette"></div>
+  <div class="bg-glow-bl"></div>
+  <div class="bg-glow-tr"></div>
+</div>
+
+<header>
+  <a href="index.html" class="logo">
+    <div class="logo-icon">Z</div>
+    <div style="display:flex;flex-direction:column;line-height:1">
+      <span class="logo-name">Zentryx</span>
+      <span class="logo-sub">Web3 Platform</span>
+    </div>
+  </a>
+  <nav style="display:flex;align-items:center;gap:2px">
+    <a href="index.html">Home</a>
+    <a href="chains.html">Chains</a>
+    <a href="swap.html" class="active">Swap</a>
+    <a href="leaderboard.html">Leaderboard</a>
+    <a href="rewards.html">Rewards</a>
+    <a href="about.html">About</a>
+  </nav>
+  <div class="header-right">
+    <div class="net-badge"><div class="net-dot"></div> Base Network</div>
+    <button class="wallet-btn" id="walletBtn" onclick="openWalletModal()">Connect Wallet</button>
+  </div>
+</header>
+
+<main>
+  <div id="screen-trade" style="display:flex;flex-direction:column;gap:12px;">
+
+    <!-- TOP BAR -->
+    <div class="trade-topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="peer-avatar" id="peer-avatar">P</div>
+        <div>
+          <div class="peer-name" id="peer-label">—</div>
+          <div class="peer-status"><div class="status-dot"></div><span style="color:var(--green)">Connected</span></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="phase-badge" id="phase-badge">Building Offer</div>
+        <div id="code-display" style="display:none;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border-color);border-radius:8px;padding:6px 14px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text3);letter-spacing:1px">YOUR CODE</span>
+          <span id="my-code" style="font-family:'Sora',sans-serif;font-size:1rem;font-weight:900;letter-spacing:3px;color:var(--sky3)">—</span>
+          <button class="copy-btn" id="copy-btn" onclick="copyCode()" style="padding:4px 10px;font-size:.55rem">Copy</button>
+        </div>
+        <button class="cancel-btn" id="disconnect-btn" onclick="disconnectPeer()" style="display:none;">⊗ Disconnect</button>
+      </div>
+    </div>
+
+    <!-- PEER CONNECT PANEL — full width, shown after wallet connect -->
+    <div id="peer-connect-panel" style="display:none;">
+      <div class="peer-connect-card">
+        <div>
+          <div class="pc-label">Your Code</div>
+          <div class="pc-mycode" id="pc-my-code">——</div>
+          <div class="pc-hint">Share this code with your trading partner</div>
+        </div>
+        <div class="pc-divider"></div>
+        <div>
+          <div class="pc-label">Enter Peer's Code</div>
+          <input class="pc-input" id="peer-code-input" type="text" maxlength="6"
+            placeholder="XXXXXX"
+            oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"
+            onkeydown="if(event.key==='Enter')sendTradeRequest()"/>
+          <button class="pc-btn" id="pc-connect-btn" onclick="sendTradeRequest()">
+            <span id="pc-btn-text">Send Request →</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOCK MSG — shown when wallet not connected -->
+    <div class="trade-locked-msg" id="lock-msg">⚠ Connect wallet to enable trading</div>
+
+    <!-- TRADE ROOM — full width row: offer panels + inventory side by side -->
+    <div id="trade-body" class="trade-locked" style="display:grid;grid-template-columns:1fr 360px 280px;gap:12px;align-items:start;">
+
+      <!-- LEFT: trade panels + confirm -->
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="trade-panels">
+          <div>
+            <div class="panel-header">
+              <span class="panel-label">Your Offer</span>
+              <div class="panel-who">
+                <div class="panel-dot" style="background:#1a77ff;box-shadow:0 0 6px rgba(26,119,255,.5)"></div>
+                <span class="panel-name">You</span>
+              </div>
+            </div>
+            <div class="panel-body" id="my-offer-body">
+              <div class="empty-msg"><div style="font-size:1.8rem">📦</div><div>Add items from your inventory</div></div>
+            </div>
+          </div>
+          <div class="middle-col">⇄</div>
+          <div>
+            <div class="panel-header">
+              <span class="panel-label">Peer's Offer</span>
+              <div class="panel-who">
+                <div class="panel-dot" style="background:var(--cyan);box-shadow:0 0 6px rgba(6,182,212,.5)"></div>
+                <span class="panel-name" id="peer-panel-name">—</span>
+              </div>
+            </div>
+            <div class="panel-body" id="peer-offer-body"><div class="empty-msg"><div style="font-size:1.4rem">👀</div><div>Waiting for peer to add items</div></div></div>
+          </div>
+        </div>
+        <div class="confirm-row" style="flex-direction:column;gap:10px;align-items:stretch;">
+          <!-- Lock status row -->
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="confirm-side">
+              <div class="confirm-circle" id="my-circle" style="background:rgba(56,189,248,.1);border:2px solid var(--border-color)">🔓</div>
+              <span class="confirm-text">You: <strong id="my-status">Not Locked</strong></span>
+            </div>
+            <div class="confirm-side">
+              <div class="confirm-circle" id="peer-circle" style="background:rgba(56,189,248,.1);border:2px solid var(--border-color)">🔓</div>
+              <span class="confirm-text">Peer: <strong id="peer-status">Not Locked</strong></span>
+            </div>
+            <button class="lock-btn" id="lock-btn" onclick="lockTrade()">🔒 Lock Trade</button>
+          </div>
+          <!-- Confirm trade row — only active when both locked -->
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border-color);border-radius:8px;">
+            <div style="flex:1;font-size:.8rem;color:var(--text2);" id="confirm-hint">Both parties must lock before confirming.</div>
+            <button class="cancel-trade-btn" id="cancel-trade-btn" onclick="cancelTrade()" disabled>↩ Cancel Lock</button>
+            <button class="confirm-btn" id="confirm-btn" onclick="finalConfirmTrade()" disabled>✓ Confirm Trade</button>
+          </div>
+        </div>
+
+        <!-- CLAIM PANEL — shown after both parties confirm -->
+        <div class="claim-panel" id="claim-panel" style="display:none;">
+          <div class="claim-header">
+            <div class="claim-title"><span>🎁</span> Claim Your Items</div>
+            <div class="claim-sub">Both parties confirmed. These items are now yours to claim.</div>
+          </div>
+          <div class="claim-items" id="claim-items"></div>
+          <div class="claim-footer" id="claim-footer">
+            <div class="claim-hint" id="claim-hint">Review your incoming items and proceed to claim.</div>
+            <button class="claim-btn" id="claim-btn" onclick="claimItems()">
+              <span id="claim-btn-text">⬇ Claim Items</span>
+            </button>
+          </div>
+          <!-- Receipt shown after successful claim -->
+          <div class="claim-receipt" id="claim-receipt" style="display:none;"></div>
+        </div>
+
+        <!-- PEER ITEM DETAILS PANEL -->
+        <div class="peer-details-panel" id="peer-details-panel" style="display:none;">
+          <div class="pdp-header">
+            <div class="pdp-title"><span style="font-size:.9rem">🔍</span> Peer's Item Details</div>
+            <div class="pdp-live"><div class="pdp-live-dot"></div>Live</div>
+          </div>
+          <div id="peer-details-body">
+            <div class="pdp-empty">No items added by peer yet</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- MIDDLE: inventory -->
+      <div id="inventory-panel-wrap">
+        <div class="inventory-panel">
+          <div class="inv-label">Your Inventory</div>
+          <div style="display:flex;gap:6px;margin-bottom:10px;">
+            <button class="inv-type-btn active" id="inv-tab-nft" onclick="switchInventoryTab('nft')">🖼 NFTs</button>
+            <button class="inv-type-btn" id="inv-tab-coin" onclick="switchInventoryTab('coin')">🪙 Coins</button>
+          </div>
+          <!-- Chain selector -->
+          <div style="margin-bottom:12px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.52rem;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:6px;">Chain</div>
+            <div class="chain-scroll" id="chain-scroll">
+              <button class="chain-pill active" id="chain-all" onclick="switchChain('all')">All</button>
+              <button class="chain-pill" id="chain-ethereum" onclick="switchChain('ethereum')">⟠ Ethereum</button>
+              <button class="chain-pill" id="chain-solana" onclick="switchChain('solana')">◎ Solana</button>
+              <button class="chain-pill" id="chain-polygon" onclick="switchChain('polygon')">⬡ Polygon</button>
+              <button class="chain-pill" id="chain-base" onclick="switchChain('base')">🔵 Base</button>
+              <button class="chain-pill" id="chain-bnb" onclick="switchChain('bnb')">🟡 BNB</button>
+              <button class="chain-pill" id="chain-arbitrum" onclick="switchChain('arbitrum')">🔷 Arbitrum</button>
+              <button class="chain-pill" id="chain-ink" onclick="switchChain('ink')">🖊 Ink</button>
+              <button class="chain-pill" id="chain-abstract" onclick="switchChain('abstract')">◈ Abstract</button>
+              <button class="chain-pill" id="chain-mon" onclick="switchChain('mon')">🟣 Mon</button>
+              <button class="chain-pill" id="chain-avalanche" onclick="switchChain('avalanche')">🔺 Avalanche</button>
+              <button class="chain-pill" id="chain-hyperevm" onclick="switchChain('hyperevm')">⚡ HyperEVM</button>
+            </div>
+          </div>
+          <div id="inventory"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: chat -->
+      <div class="chat-panel" id="chat-panel">
+        <div class="chat-header">
+          <div class="chat-title">Trade Chat</div>
+          <div class="chat-online" id="chat-status" style="display:none;">
+            <div class="chat-online-dot"></div>Live
+          </div>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-locked-msg" id="chat-locked">
+            <div style="font-size:1.6rem">💬</div>
+            <div>Chat unlocks when<br/>peer connects</div>
+          </div>
+        </div>
+        <div class="chat-input-row">
+          <textarea class="chat-input" id="chat-input"
+            placeholder="Type a message..."
+            maxlength="300"
+            disabled
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}"></textarea>
+          <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()" disabled>
+            ➤
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /trade-body -->
+
+  </div><!-- /screen-trade -->
+</main>
+
+<!-- WALLET MODAL -->
+<div class="modal-overlay" id="walletModal" onclick="closeModalOuter(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Connect Wallet</div>
+    <div class="modal-sub">Choose your wallet to start trading NFTs peer-to-peer.</div>
+    <div id="walletList"></div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────
+const SUPABASE_URL = 'https://wbrspewpvzoziqfinpfd.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndicnNwZXdwdnpvemlxZmlucGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNTQ2MjEsImV4cCI6MjA4OTgzMDYyMX0.j_MgjstUKK6K9DnCEcC4ilIocHY3VNCwMNiT47BrBUo';
+
+const STATE = { connected: false, wallet: null };
+let MY_CODE = '';
+let myOffer      = [];
+let myLocked     = false;   // has THIS user locked?
+let peerLocked   = false;   // has PEER locked? (polled from Supabase)
+let myConfirmed  = false;
+let peerConfirmed = false;  // has peer also confirmed?
+let _peerOffer   = [];      // snapshot of peer's offer at confirm time
+let CURRENT_SESSION_ID = null;  // shared session ID for lock/disconnect signals
+let lockPollInterval = null;
+let _sessionInitiator = null;   // MY_CODE if I created the request, else peer's code
+
+const WALLETS = [
+  { name:'Rabby Wallet',    icon:'https://raw.githubusercontent.com/RabbyHub/Rabby/develop/src/assets/images/icon-128.png', detect:()=>!!(window.ethereum?.isRabby), install:'https://rabby.io' },
+  { name:'MetaMask',        icon:'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg', detect:()=>!!(window.ethereum?.isMetaMask&&!window.ethereum?.isRabby), install:'https://metamask.io' },
+  { name:'Coinbase Wallet', icon:`data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230052ff'/><circle cx='50' cy='50' r='35' fill='white'/><circle cx='50' cy='50' r='22' fill='%230052ff'/></svg>`, detect:()=>!!(window.ethereum?.isCoinbaseWallet), install:'https://www.coinbase.com/wallet' },
+  { name:'Other EVM Wallet',icon:`data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23b8d8f0'/><text y='.9em' font-size='70' x='10'>🌐</text></svg>`, detect:()=>!!(window.ethereum), install:null }
+];
+
+// Opens wallet modal (or disconnects if already connected)
+function openWalletModal() {
+  if (STATE.connected) { disconnectWallet(); return; }
+  buildWalletList();
+  document.getElementById('walletModal').classList.add('open');
+}
+function closeModal() { document.getElementById('walletModal').classList.remove('open'); }
+function closeModalOuter(e) { if (e.target.id === 'walletModal') closeModal(); }
+
+function buildWalletList() {
+  const el = document.getElementById('walletList');
+  el.innerHTML = '';
+  WALLETS.forEach(w => {
+    const found = w.detect();
+    const div = document.createElement('div');
+    div.className = 'wopt';
+    div.innerHTML = `
+      <div class="wopt-l">
+        <img src="${w.icon}" class="wopt-ic" onerror="this.style.display='none'"/>
+        <div>
+          <div class="wopt-n">${w.name}</div>
+          <div class="wopt-hint">${found ? 'Click to connect' : (w.install ? 'Not installed' : 'Not detected')}</div>
+        </div>
+      </div>
+      <span class="wtag ${found?'y':'n'}">${found ? '● Ready' : (w.install ? 'Install' : '—')}</span>`;
+    div.onclick = () => { if (found) requestConnection(); else if (w.install) window.open(w.install,'_blank'); };
+    el.appendChild(div);
+  });
+}
+
+// Triggers the wallet extension's own popup
+function requestConnection() {
+  if (!window.ethereum) { alert('No wallet found. Install MetaMask or Rabby first.'); return; }
+  window.ethereum.request({ method: 'eth_requestAccounts' })
+    .then(accounts => {
+      if (accounts.length > 0) {
+        STATE.wallet = accounts[0]; STATE.connected = true;
+        closeModal(); onConnected();
+      }
+    })
+    .catch(err => { if (err.code !== 4001) console.error(err); });
+}
+
+function onConnected() {
+  const btn = document.getElementById('walletBtn');
+  btn.textContent = STATE.wallet.slice(0,6) + '...' + STATE.wallet.slice(-4);
+  btn.classList.add('connected');
+
+  // Unlock trade body (inventory is inside it now)
+  document.getElementById('trade-body').classList.remove('trade-locked');
+  document.getElementById('trade-body').style.display = 'none'; // hidden until peer joins
+  document.getElementById('lock-msg').style.display = 'none';
+
+  // Auto-generate permanent code from wallet address — same every time
+  MY_CODE = walletToCode(STATE.wallet.toLowerCase());
+  document.getElementById('my-code').textContent = MY_CODE;
+  document.getElementById('code-display').style.display = 'flex';
+
+  // Listen for changes
+  if (window.ethereum) {
+    window.ethereum.on('accountsChanged', a => {
+      if (!a.length) disconnectWallet();
+      else {
+        STATE.wallet = a[0];
+        document.getElementById('walletBtn').textContent = a[0].slice(0,6)+'...'+a[0].slice(-4);
+        // Update code for new account
+        MY_CODE = walletToCode(a[0].toLowerCase());
+        document.getElementById('my-code').textContent = MY_CODE;
+      }
+    });
+    window.ethereum.on('chainChanged', () => window.location.reload());
+  }
+
+  // Show peer connect panel and start listening for incoming requests
+  showPeerConnectPanel();
+  startPollingForRequests();
+}
+
+function disconnectWallet() {
+  STATE.connected = false; STATE.wallet = null; MY_CODE = '';
+  // Stop polling for peer requests
+  if (window._peerPollInterval) clearInterval(window._peerPollInterval);
+  hidePeerConnectPanel();
+  document.getElementById('requestPopup').classList.remove('show');
+  const btn = document.getElementById('walletBtn');
+  btn.textContent = 'Connect Wallet'; btn.classList.remove('connected');
+  document.getElementById('trade-body').classList.add('trade-locked');
+  document.getElementById('lock-msg').style.display = '';
+  document.getElementById('code-display').style.display = 'none';
+  document.getElementById('my-code').textContent = '—';
+  stopChat();
+  resetTradeRoom();
+}
+
+// On load — silently restore if already approved (no popup)
+window.addEventListener('load', () => {
+  renderInventory();
+  if (window.ethereum) {
+    window.ethereum.request({ method: 'eth_accounts' })
+      .then(a => { if (a && a.length) { STATE.wallet=a[0]; STATE.connected=true; onConnected(); } })
+      .catch(()=>{});
+  }
+});
+
+// Generates a permanent unique 6-char code from wallet address.
+// Same wallet always gets the same code — no storage, no randomness.
+function walletToCode(address) {
+  const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  // Simple but consistent hash: multiply each char code through the address
+  let hash = 0;
+  for (let i = 0; i < address.length; i++) {
+    hash = ((hash << 5) - hash) + address.charCodeAt(i);
+    hash |= 0; // Convert to 32-bit integer
+  }
+  // Use hash segments to pick 6 characters
+  let code = '';
+  let seed = Math.abs(hash);
+  for (let i = 0; i < 6; i++) {
+    code += CHARS[seed % CHARS.length];
+    // Mix the seed differently for each position
+    seed = Math.abs(((seed * 1664525 + 1013904223) | 0));
+  }
+  return code;
+}
+
+
+
+// ── PEER CONNECTION SYSTEM (Supabase Realtime) ───────────
+// Uses a 'trade_requests' table in Supabase.
+// Schema needed (run once in Supabase SQL editor):
+//   CREATE TABLE trade_requests (
+//     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+//     from_code text NOT NULL,
+//     from_wallet text NOT NULL,
+//     to_code text NOT NULL,
+//     status text DEFAULT 'pending',  -- pending | accepted | rejected
+//     created_at timestamptz DEFAULT now()
+//   );
+//   ALTER TABLE trade_requests ENABLE ROW LEVEL SECURITY;
+//   CREATE POLICY "allow all" ON trade_requests FOR ALL USING (true) WITH CHECK (true);
+
+let peerSubscription = null;   // Supabase realtime channel
+let pendingRequestId = null;   // ID of the request we sent
+let incomingRequestId = null;  // ID of the request we received
+
+// ── Show peer connect panel after wallet connected ────────
+function showPeerConnectPanel() {
+  const panel = document.getElementById('peer-connect-panel');
+  const codeEl = document.getElementById('pc-my-code');
+  if (panel) panel.style.display = 'block';
+  if (codeEl) codeEl.textContent = MY_CODE;
+}
+
+function hidePeerConnectPanel() {
+  const panel = document.getElementById('peer-connect-panel');
+  if (panel) panel.style.display = 'none';
+}
+
+// ── User A: Send trade request to User B ─────────────────
+async function sendTradeRequest() {
+  const input = document.getElementById('peer-code-input');
+  const toCode = input.value.trim().toUpperCase();
+
+  if (toCode.length !== 6) {
+    shakePcInput(); return;
+  }
+  if (toCode === MY_CODE) {
+    showPcError('That is your own code!'); return;
+  }
+
+  const btn = document.getElementById('pc-connect-btn');
+  const btnText = document.getElementById('pc-btn-text');
+  btn.disabled = true;
+  btnText.textContent = 'Sending...';
+
+  try {
+    // Insert a trade request into Supabase
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/trade_requests`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        from_code:   MY_CODE,
+        from_wallet: STATE.wallet,
+        to_code:     toCode,
+        status:      'pending'
+      })
+    });
+
+    if (!res.ok) throw new Error('Failed to send request');
+    const data = await res.json();
+    pendingRequestId = data[0]?.id;
+
+    btnText.textContent = '⏳ Waiting for response...';
+
+    // Subscribe to updates on this specific request
+    listenForRequestUpdate(pendingRequestId);
+
+  } catch(e) {
+    console.error(e);
+    btn.disabled = false;
+    btnText.textContent = 'Send Request →';
+    showPcError('Could not send request. Try again.');
+  }
+}
+
+// ── User A: Listen for User B's response ─────────────────
+function listenForRequestUpdate(requestId) {
+  // Poll every 2 seconds (simpler than websocket for now)
+  const poll = setInterval(async () => {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${requestId}&select=status`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      );
+      const data = await res.json();
+      const status = data[0]?.status;
+
+      if (status === 'accepted') {
+        clearInterval(poll);
+        onPeerAccepted(data[0]);
+      } else if (status === 'rejected') {
+        clearInterval(poll);
+        onPeerRejected();
+      }
+    } catch(e) {}
+  }, 2000);
+
+  // Stop polling after 2 minutes (timeout)
+  setTimeout(() => {
+    clearInterval(poll);
+    const btn = document.getElementById('pc-connect-btn');
+    const btnText = document.getElementById('pc-btn-text');
+    if (btn && btnText && btn.disabled) {
+      btn.disabled = false;
+      btnText.textContent = 'Send Request →';
+      showPcError('Request timed out. Try again.');
+    }
+  }, 120000);
+}
+
+// ── User A: Peer accepted ─────────────────────────────────
+async function onPeerAccepted(requestData) {
+  // Fetch full request to get peer's wallet
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${pendingRequestId}`,
+    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+  );
+  const data = await res.json();
+  const peerWallet = data[0]?.to_wallet || data[0]?.to_code;
+
+  hidePeerConnectPanel();
+  enterTradeRoom(peerWallet, document.getElementById('peer-code-input').value.trim().toUpperCase());
+}
+
+// ── User A: Peer rejected ─────────────────────────────────
+function onPeerRejected() {
+  const btn = document.getElementById('pc-connect-btn');
+  const btnText = document.getElementById('pc-btn-text');
+  btn.disabled = false;
+  btnText.textContent = 'Send Request →';
+  showPcError('Request was declined.');
+}
+
+// ── User B: Poll for incoming requests ───────────────────
+function startPollingForRequests() {
+  if (!MY_CODE) return;
+
+  const poll = setInterval(async () => {
+    if (!STATE.connected) { clearInterval(poll); return; }
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/trade_requests?to_code=eq.${MY_CODE}&status=eq.pending&order=created_at.desc&limit=1`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      );
+      const data = await res.json();
+      if (data && data.length > 0 && data[0].id !== incomingRequestId) {
+        incomingRequestId = data[0].id;
+        showIncomingRequest(data[0]);
+      }
+    } catch(e) {}
+  }, 3000);
+
+  // Store so we can stop it on disconnect
+  window._peerPollInterval = poll;
+}
+
+// ── User B: Show incoming request popup ──────────────────
+function showIncomingRequest(request) {
+  const popup = document.getElementById('requestPopup');
+  const addrEl = document.getElementById('rp-addr');
+  const msgEl = popup.querySelector('.rp-msg');
+
+  const shortWallet = request.from_wallet
+    ? request.from_wallet.slice(0,6) + '...' + request.from_wallet.slice(-4)
+    : 'Unknown';
+
+  msgEl.textContent = 'A trader wants to swap NFTs with you';
+  addrEl.textContent = `From: ${shortWallet}  ·  Code: ${request.from_code}`;
+  popup.classList.add('show');
+}
+
+// ── User B: Accept the request ───────────────────────────
+async function acceptTradeRequest() {
+  document.getElementById('requestPopup').classList.remove('show');
+
+  try {
+    // Update status to accepted in Supabase
+    await fetch(`${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${incomingRequestId}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status: 'accepted', to_wallet: STATE.wallet })
+    });
+
+    // Fetch the request to get peer info
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${incomingRequestId}`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+    );
+    const data = await res.json();
+    const req = data[0];
+
+    hidePeerConnectPanel();
+    enterTradeRoom(req.from_wallet, req.from_code);
+
+  } catch(e) {
+    console.error('Accept failed:', e);
+  }
+}
+
+// ── User B: Reject the request ───────────────────────────
+async function rejectTradeRequest() {
+  document.getElementById('requestPopup').classList.remove('show');
+  incomingRequestId = null;
+
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${incomingRequestId}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status: 'rejected' })
+    });
+  } catch(e) {}
+}
+
+// ── Enter trade room with peer ────────────────────────────
+function enterTradeRoom(peerWallet, peerCode, sessionId) {
+  const shortPeer = peerWallet
+    ? peerWallet.slice(0,6) + '...' + peerWallet.slice(-4)
+    : peerCode;
+
+  CURRENT_SESSION_ID = sessionId || pendingRequestId || incomingRequestId;
+  // initiator = sent the request (offer_a / locked_a), acceptor = received it (offer_b / locked_b)
+  _sessionInitiator = !!pendingRequestId; // true = I am initiator, false = I am acceptor
+
+  // Update topbar with peer info
+  document.getElementById('peer-label').textContent = shortPeer;
+  document.getElementById('peer-avatar').textContent = peerCode ? peerCode[0] : 'P';
+  document.getElementById('peer-panel-name').textContent = shortPeer;
+  document.getElementById('phase-badge').textContent = 'Building Offer';
+
+  // Show disconnect button
+  document.getElementById('disconnect-btn').style.display = 'inline-flex';
+
+  // Hide peer connect panel, show trade room
+  hidePeerConnectPanel();
+  document.getElementById('trade-body').style.display = 'grid';
+
+  // Start real-time chat
+  initChat(MY_CODE, peerCode);
+
+  // Poll for peer's lock status AND for peer disconnect
+  startLockPoll(peerCode);
+}
+
+function startLockPoll(peerCode) {
+  if (lockPollInterval) clearInterval(lockPollInterval);
+  lockPollInterval = setInterval(async () => {
+    if (!CURRENT_SESSION_ID) return;
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${CURRENT_SESSION_ID}&select=my_locked,status,offer_a,offer_b`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      );
+      const data = await res.json();
+      if (!data || !data.length) return;
+      const row = data[0];
+
+      // ── Check if peer disconnected ──────────────────────────
+      if (row.status === 'disconnected') {
+        clearInterval(lockPollInterval);
+        addSystemMessage('⚠ Peer disconnected from the trade.');
+        setTimeout(() => { alert('Your trading partner disconnected.'); resetTradeRoom(); }, 1000);
+        return;
+      }
+
+      // my_locked stores pipe-separated codes of everyone who locked e.g. "ABC123|XYZ789"
+      const lockedCodes = row.my_locked ? row.my_locked.split('|').filter(Boolean) : [];
+      const peerIsLocked = lockedCodes.includes(peerCode) || (lockedCodes.length > 0 && !lockedCodes.includes(MY_CODE) && lockedCodes.length >= 1);
+
+      // ── Sync peer's offer in real time ──────────────────────
+      // initiator writes offer_a, acceptor writes offer_b
+      const peerOfferField = _sessionInitiator ? 'offer_b' : 'offer_a';
+      const peerOfferRaw   = row[peerOfferField];
+      try {
+        const peerItems = peerOfferRaw
+          ? (typeof peerOfferRaw === 'string' ? JSON.parse(peerOfferRaw) : peerOfferRaw)
+          : [];
+        renderPeerOfferFromData(peerItems);
+        renderPeerDetails(peerItems);
+      } catch(e) {}
+
+      // ── Peer locked ─────────────────────────────────────────
+      if (peerIsLocked && !peerLocked) {
+        peerLocked = true;
+        const pc = document.getElementById('peer-circle');
+        pc.textContent = '🔒';
+        pc.style.background = 'rgba(16,185,129,.15)';
+        pc.style.borderColor = '#10b981';
+        document.getElementById('peer-status').textContent = 'Locked';
+        document.getElementById('peer-status').style.color = 'var(--green)';
+        addSystemMessage('🔒 Peer locked their assets');
+        updateConfirmBtn();
+      }
+
+      // ── Peer unlocked ───────────────────────────────────────
+      if (!peerIsLocked && peerLocked) {
+        peerLocked = false;
+        const pc = document.getElementById('peer-circle');
+        pc.textContent = '🔓';
+        pc.style.cssText = 'background:rgba(56,189,248,.1);border:2px solid var(--border-color)';
+        document.getElementById('peer-status').textContent = 'Not Locked';
+        document.getElementById('peer-status').style.color = '';
+        addSystemMessage('↩ Peer cancelled their lock — their offer has been cleared.');
+        updateConfirmBtn();
+      }
+
+      // ── Both confirmed → trigger claim if I already confirmed ─
+      const allParts = (row.my_locked || '').split('|').filter(Boolean);
+      const peerJustConfirmed = allParts.some(p => p.startsWith('CONFIRMED:') && p !== 'CONFIRMED:' + MY_CODE);
+      if (peerJustConfirmed && myConfirmed && !peerConfirmed) {
+        peerConfirmed = true;
+        onBothConfirmed(_peerOffer);
+      }
+
+    } catch(e) { console.error('poll error', e); }
+  }, 2500);
+}
+
+// ── UI helpers ────────────────────────────────────────────
+function shakePcInput() {
+  const input = document.getElementById('peer-code-input');
+  input.style.borderColor = 'var(--red)';
+  input.style.animation = 'shake .3s ease';
+  setTimeout(() => { input.style.borderColor = ''; input.style.animation = ''; }, 600);
+}
+
+function showPcError(msg) {
+  const btn = document.getElementById('pc-connect-btn');
+  const btnText = document.getElementById('pc-btn-text');
+  btnText.textContent = msg;
+  btn.style.background = 'rgba(239,68,68,0.15)';
+  btn.style.color = 'var(--red)';
+  btn.style.border = '1px solid rgba(239,68,68,0.3)';
+  setTimeout(() => {
+    btn.disabled = false;
+    btnText.textContent = 'Send Request →';
+    btn.style.background = '';
+    btn.style.color = '';
+    btn.style.border = '';
+  }, 2500);
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(MY_CODE).catch(()=>{});
+  const b = document.getElementById('copy-btn');
+  b.textContent = '✓ Copied'; b.classList.add('copied');
+  setTimeout(()=>{ b.textContent='Copy'; b.classList.remove('copied'); }, 2000);
+}
+
+async function disconnectPeer() {
+  if (!confirm('Disconnect from this trade session? Both users will be notified.')) return;
+  if (CURRENT_SESSION_ID) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${CURRENT_SESSION_ID}`, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'disconnected' })
+      });
+    } catch(e) {}
+  }
+  resetTradeRoom();
+}
+
+function resetTradeRoom() {
+  myOffer = []; myLocked = false; peerLocked = false; myConfirmed = false; peerConfirmed = false; _peerOffer = [];
+  CURRENT_SESSION_ID = null;
+  if (lockPollInterval) { clearInterval(lockPollInterval); lockPollInterval = null; }
+  stopChat();
+  document.getElementById('my-offer-body').innerHTML = '<div class="empty-msg"><div style="font-size:1.8rem">📦</div><div>Add items from your inventory</div></div>';
+  document.getElementById('peer-offer-body').innerHTML = '<div class="empty-msg"><div style="font-size:1.4rem">👀</div><div>Waiting for peer to add items</div></div>';
+  document.getElementById('peer-label').textContent = '—';
+  document.getElementById('peer-avatar').textContent = 'P';
+  document.getElementById('peer-panel-name').textContent = '—';
+  document.getElementById('phase-badge').textContent = 'Building Offer';
+  document.getElementById('my-circle').textContent = '🔓';
+  document.getElementById('my-circle').style.cssText = 'background:rgba(56,189,248,.1);border:2px solid var(--border-color)';
+  document.getElementById('peer-circle').textContent = '🔓';
+  document.getElementById('peer-circle').style.cssText = 'background:rgba(56,189,248,.1);border:2px solid var(--border-color)';
+  document.getElementById('my-status').textContent = 'Not Locked'; document.getElementById('my-status').style.color = '';
+  document.getElementById('peer-status').textContent = 'Not Locked'; document.getElementById('peer-status').style.color = '';
+  document.getElementById('confirm-hint').textContent = 'Both parties must lock before confirming.';
+  document.getElementById('confirm-hint').style.color = '';
+  document.getElementById('confirm-btn').disabled = true;
+  document.getElementById('confirm-btn').textContent = '✓ Confirm Trade';
+  const lb = document.getElementById('lock-btn');
+  lb.className = 'lock-btn'; lb.textContent = '🔒 Lock Trade'; lb.disabled = false;
+  const ctb = document.getElementById('cancel-trade-btn');
+  if (ctb) ctb.disabled = true;
+  document.getElementById('disconnect-btn').style.display = 'none';
+  const pdp = document.getElementById('peer-details-panel');
+  if (pdp) { pdp.style.display = 'none'; document.getElementById('peer-details-body').innerHTML = '<div class="pdp-empty">No items added by peer yet</div>'; }
+  showPeerConnectPanel();
+  document.getElementById('trade-body').style.display = 'none';
+}
+
+async function cancelTrade() {
+  // Unlock and clear own offer — does NOT disconnect the session
+  myOffer = []; myLocked = false; myConfirmed = false;
+
+  // Reset lock UI
+  const lb = document.getElementById('lock-btn');
+  lb.className = 'lock-btn'; lb.textContent = '🔒 Lock Trade'; lb.disabled = false;
+  const mc = document.getElementById('my-circle');
+  mc.textContent = '🔓'; mc.style.cssText = 'background:rgba(56,189,248,.1);border:2px solid var(--border-color)';
+  document.getElementById('my-status').textContent = 'Not Locked';
+  document.getElementById('my-status').style.color = '';
+
+  // Disable cancel button again
+  const cancelBtn = document.getElementById('cancel-trade-btn');
+  if (cancelBtn) cancelBtn.disabled = true;
+
+  // Clear offer panel
+  document.getElementById('my-offer-body').innerHTML = '<div class="empty-msg"><div style="font-size:1.8rem">📦</div><div>Add items from your inventory</div></div>';
+
+  // Remove MY_CODE from my_locked so peer sees we unlocked
+  if (CURRENT_SESSION_ID) {
+    try {
+      const getRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${CURRENT_SESSION_ID}&select=my_locked`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      );
+      const getData = await getRes.json();
+      const existing = getData[0]?.my_locked || '';
+      const codes = existing.split('|').filter(c => c && c !== MY_CODE);
+      await fetch(`${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${CURRENT_SESSION_ID}`, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ my_locked: codes.join('|') || null })
+      });
+    } catch(e) { console.error('cancelTrade patch failed', e); }
+  }
+
+  // Sync empty offer to Supabase so peer sees the cleared state
+  syncMyOffer();
+  updateConfirmBtn();
+  addSystemMessage('↩ You cancelled your lock — items unlocked and offer cleared.');
+}
+
+// ── INVENTORY DATA (mock — replace with real wallet fetch) ───
+const ALL_ASSETS = [
+  // NFTs — Ethereum
+  {id:'nft-eth-1',name:'CryptoPunk #7804',  collection:'Punks',     value:'62 ETH',   emoji:'👾',type:'nft',chain:'ethereum'},
+  {id:'nft-eth-2',name:'Bored Ape #3421',   collection:'BAYC',      value:'18.5 ETH', emoji:'🦍',type:'nft',chain:'ethereum'},
+  // NFTs — Solana
+  {id:'nft-sol-1',name:'Mad Lad #4492',     collection:'Mad Lads',  value:'180 SOL',  emoji:'🤡',type:'nft',chain:'solana'},
+  {id:'nft-sol-2',name:'Okay Bear #1103',   collection:'Okay Bears',value:'95 SOL',   emoji:'🐻',type:'nft',chain:'solana'},
+  // NFTs — Polygon
+  {id:'nft-poly-1',name:'Invisible Friend #88',collection:'IF',     value:'310 MATIC',emoji:'👤',type:'nft',chain:'polygon'},
+  // NFTs — Base
+  {id:'nft-base-1',name:'Based Frog #712',  collection:'Based Frogs',value:'0.8 ETH', emoji:'🐸',type:'nft',chain:'base'},
+  {id:'nft-base-2',name:'Degen #2201',      collection:'Degens',    value:'0.4 ETH',  emoji:'🎰',type:'nft',chain:'base'},
+  // NFTs — BNB
+  {id:'nft-bnb-1',name:'PancakeSwap Cake #55',collection:'CakeNFT', value:'12 BNB',   emoji:'🥞',type:'nft',chain:'bnb'},
+  // NFTs — Arbitrum
+  {id:'nft-arb-1',name:'Smol Brain #990',   collection:'Smols',     value:'2.1 ETH',  emoji:'🧠',type:'nft',chain:'arbitrum'},
+  // NFTs — Ink
+  {id:'nft-ink-1',name:'Ink Specter #330',  collection:'Specters',  value:'0.3 ETH',  emoji:'🖊',type:'nft',chain:'ink'},
+  // NFTs — Abstract
+  {id:'nft-abs-1',name:'Abstract Form #14', collection:'Forms',     value:'0.15 ETH', emoji:'◈',type:'nft',chain:'abstract'},
+  // NFTs — Mon
+  {id:'nft-mon-1',name:'Monad Ape #77',     collection:'MonApes',   value:'22 MON',   emoji:'🟣',type:'nft',chain:'mon'},
+  // NFTs — Avalanche
+  {id:'nft-avax-1',name:'Chikn #4401',      collection:'Chikn',     value:'18 AVAX',  emoji:'🐔',type:'nft',chain:'avalanche'},
+  // NFTs — HyperEVM
+  {id:'nft-hyp-1',name:'HyperPunk #5',      collection:'HyperPunks',value:'5.5 HYPE', emoji:'⚡',type:'nft',chain:'hyperevm'},
+  // NFTs — Doodles (Ethereum)
+  {id:'nft-eth-3',name:'Doodle #8754',      collection:'Doodles',   value:'4.2 ETH',  emoji:'🎨',type:'nft',chain:'ethereum'},
+  {id:'nft-eth-4',name:'Pudgy Penguin #112',collection:'PPenguin',  value:'12 ETH',   emoji:'🐧',type:'nft',chain:'ethereum'},
+
+  // Coins — Ethereum
+  {id:'coin-eth-1',name:'Ethereum',         collection:'ETH',       value:'2.40 ETH', emoji:'⟠',type:'coin',chain:'ethereum'},
+  {id:'coin-eth-2',name:'USD Coin',         collection:'USDC',      value:'850 USDC', emoji:'💵',type:'coin',chain:'ethereum'},
+  {id:'coin-eth-3',name:'Wrapped BTC',      collection:'WBTC',      value:'0.012 WBTC',emoji:'₿',type:'coin',chain:'ethereum'},
+  {id:'coin-eth-4',name:'Chainlink',        collection:'LINK',      value:'120 LINK', emoji:'🔗',type:'coin',chain:'ethereum'},
+  // Coins — Solana
+  {id:'coin-sol-1',name:'Solana',           collection:'SOL',       value:'14.5 SOL', emoji:'◎',type:'coin',chain:'solana'},
+  {id:'coin-sol-2',name:'Bonk',             collection:'BONK',      value:'2M BONK',  emoji:'🐶',type:'coin',chain:'solana'},
+  // Coins — Polygon
+  {id:'coin-poly-1',name:'Polygon',         collection:'MATIC',     value:'1200 MATIC',emoji:'⬡',type:'coin',chain:'polygon'},
+  {id:'coin-poly-2',name:'Aave',            collection:'AAVE',      value:'8 AAVE',   emoji:'👻',type:'coin',chain:'polygon'},
+  // Coins — Base
+  {id:'coin-base-1',name:'Ethereum (Base)', collection:'ETH',       value:'1.1 ETH',  emoji:'🔵',type:'coin',chain:'base'},
+  {id:'coin-base-2',name:'Brett',           collection:'BRETT',     value:'5000 BRETT',emoji:'🤙',type:'coin',chain:'base'},
+  // Coins — BNB
+  {id:'coin-bnb-1',name:'BNB',              collection:'BNB',       value:'3.2 BNB',  emoji:'🟡',type:'coin',chain:'bnb'},
+  {id:'coin-bnb-2',name:'Cake',             collection:'CAKE',      value:'80 CAKE',  emoji:'🥞',type:'coin',chain:'bnb'},
+  // Coins — Arbitrum
+  {id:'coin-arb-1',name:'Arbitrum',         collection:'ARB',       value:'900 ARB',  emoji:'🔷',type:'coin',chain:'arbitrum'},
+  {id:'coin-arb-2',name:'GMX',              collection:'GMX',       value:'5 GMX',    emoji:'📈',type:'coin',chain:'arbitrum'},
+  // Coins — Ink
+  {id:'coin-ink-1',name:'Ink Token',        collection:'INK',       value:'300 INK',  emoji:'🖊',type:'coin',chain:'ink'},
+  // Coins — Abstract
+  {id:'coin-abs-1',name:'Abstract',         collection:'ABS',       value:'200 ABS',  emoji:'◈',type:'coin',chain:'abstract'},
+  // Coins — Mon
+  {id:'coin-mon-1',name:'Monad',            collection:'MON',       value:'50 MON',   emoji:'🟣',type:'coin',chain:'mon'},
+  // Coins — Avalanche
+  {id:'coin-avax-1',name:'Avalanche',       collection:'AVAX',      value:'12 AVAX',  emoji:'🔺',type:'coin',chain:'avalanche'},
+  {id:'coin-avax-2',name:'JOE',             collection:'JOE',       value:'400 JOE',  emoji:'☕',type:'coin',chain:'avalanche'},
+  // Coins — HyperEVM
+  {id:'coin-hyp-1',name:'HyperEVM',         collection:'HYPE',      value:'8 HYPE',   emoji:'⚡',type:'coin',chain:'hyperevm'},
+];
+
+// Keep backward compat references (addToOffer searches ALL_ASSETS)
+const INVENTORY = ALL_ASSETS.filter(a=>a.type==='nft');
+const COINS      = ALL_ASSETS.filter(a=>a.type==='coin');
+
+let activeInventoryTab = 'nft'; // 'nft' | 'coin'
+let activeChain        = 'all';
+
+function switchInventoryTab(tab) {
+  activeInventoryTab = tab;
+  document.getElementById('inv-tab-nft').classList.toggle('active', tab === 'nft');
+  document.getElementById('inv-tab-coin').classList.toggle('active', tab === 'coin');
+  renderInventory();
+}
+
+function switchChain(chain) {
+  activeChain = chain;
+  // Update pill active state
+  document.querySelectorAll('.chain-pill').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('chain-' + chain);
+  if (target) target.classList.add('active');
+  renderInventory();
+}
+
+function renderInventory() {
+  let items = ALL_ASSETS.filter(a => a.type === activeInventoryTab);
+  if (activeChain !== 'all') items = items.filter(a => a.chain === activeChain);
+
+  const el = document.getElementById('inventory');
+  if (!items.length) {
+    el.innerHTML = '<div style="text-align:center;padding:28px 0;font-family:JetBrains Mono,monospace;font-size:.6rem;letter-spacing:1px;color:var(--text3);opacity:.6">No items on this chain</div>';
+    return;
+  }
+  el.innerHTML = items.map(a=>`
+    <div class="inv-item" onclick="addToOffer('${a.id}')">
+      <span style="font-size:1.3rem">${a.emoji}</span>
+      <div style="flex:1">
+        <div class="inv-name">${a.name}</div>
+        <div class="inv-meta">${a.collection} · ${a.value}</div>
+      </div>
+      <button class="add-btn">+ Add</button>
+    </div>`).join('');
+}
+
+function renderPeerOffer() {
+  document.getElementById('peer-offer-body').innerHTML = PEER_OFFER.map(a=>`
+    <div class="asset-chip">
+      <span class="emoji">${a.emoji}</span>
+      <div class="asset-info"><div class="asset-name">${a.name}</div><div class="asset-val">${a.value}</div></div>
+    </div>`).join('');
+}
+
+function addToOffer(id) {
+  if (myLocked || myConfirmed || myOffer.find(a=>a.id===id)) return;
+  const asset = ALL_ASSETS.find(a=>a.id===id);
+  if (asset) { myOffer.push(asset); renderMyOffer(); syncMyOffer(); }
+}
+
+function removeFromOffer(id) {
+  if (myLocked || myConfirmed) return;
+  myOffer = myOffer.filter(a=>a.id!==id);
+  renderMyOffer(); syncMyOffer();
+}
+
+function renderMyOffer() {
+  const el = document.getElementById('my-offer-body');
+  if (!myOffer.length) {
+    el.innerHTML = '<div class="empty-msg"><div style="font-size:1.8rem">📦</div><div>Add items from your inventory</div></div>';
+    return;
+  }
+  el.innerHTML = myOffer.map(a=>`
+    <div class="asset-chip">
+      <span class="emoji">${a.emoji}</span>
+      <div class="asset-info">
+        <div class="asset-name">${a.name} <span style="font-family:'JetBrains Mono',monospace;font-size:.48rem;padding:1px 5px;border-radius:3px;vertical-align:middle;${a.type==='coin'?'background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:var(--gold)':'background:rgba(14,165,233,.1);border:1px solid rgba(14,165,233,.3);color:var(--sky3)'}">${a.type==='coin'?'COIN':'NFT'}</span></div>
+        <div class="asset-val">${a.value}</div>
+      </div>
+      ${!myLocked ? `<button class="rm-btn" onclick="removeFromOffer('${a.id}')">✕</button>` : '<span style="font-size:.7rem;color:var(--green)">🔒</span>'}
+    </div>`).join('');
+  updateConfirmBtn();
+}
+
+function renderPeerOfferFromData(items) {
+  const el = document.getElementById('peer-offer-body');
+  if (!items || !items.length) {
+    el.innerHTML = '<div class="empty-msg"><div style="font-size:1.4rem">👀</div><div>Waiting for peer to add items</div></div>';
+    return;
+  }
+  el.innerHTML = items.map(a=>`
+    <div class="asset-chip">
+      <span class="emoji">${a.emoji || '📦'}</span>
+      <div class="asset-info">
+        <div class="asset-name">${escapeHtml(String(a.name))} <span style="font-family:'JetBrains Mono',monospace;font-size:.48rem;padding:1px 5px;border-radius:3px;vertical-align:middle;${a.type==='coin'?'background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:var(--gold)':'background:rgba(14,165,233,.1);border:1px solid rgba(14,165,233,.3);color:var(--sky3)'}">${a.type==='coin'?'COIN':'NFT'}</span></div>
+        <div class="asset-val">${escapeHtml(String(a.value))}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── PEER DETAILS PANEL ────────────────────────────────────
+// Chain → marketplace links config
+const CHAIN_MARKETS = {
+  ethereum:  [
+    { name:'OpenSea',    icon:'https://storage.googleapis.com/opensea-static/Logomark/OpenSea-Full-Logo%20(light).png', urlFn: (col,id) => `https://opensea.io/assets/ethereum/${col}/${id}` },
+    { name:'Blur',       icon:'https://blur.io/favicons/favicon-32x32.png',                                             urlFn: (col,id) => `https://blur.io/asset/${col}/${id}` },
+    { name:'LooksRare',  icon:'https://looksrare.org/favicon.ico',                                                      urlFn: (col,id) => `https://looksrare.org/collections/${col}/${id}` },
+  ],
+  solana: [
+    { name:'Magic Eden', icon:'https://magiceden.io/favicon.ico',  urlFn: (col,id) => `https://magiceden.io/item-details/${id}` },
+    { name:'Tensor',     icon:'https://www.tensor.trade/favicon.ico', urlFn: (col,id) => `https://www.tensor.trade/item/${id}` },
+  ],
+  polygon: [
+    { name:'OpenSea',    icon:'https://storage.googleapis.com/opensea-static/Logomark/OpenSea-Full-Logo%20(light).png', urlFn: (col,id) => `https://opensea.io/assets/matic/${col}/${id}` },
+  ],
+  base: [
+    { name:'OpenSea',    icon:'https://storage.googleapis.com/opensea-static/Logomark/OpenSea-Full-Logo%20(light).png', urlFn: (col,id) => `https://opensea.io/assets/base/${col}/${id}` },
+    { name:'Magic Eden', icon:'https://magiceden.io/favicon.ico',  urlFn: (col,id) => `https://magiceden.io/collections/base/${col}` },
+  ],
+  bnb: [
+    { name:'OpenSea',    icon:'https://storage.googleapis.com/opensea-static/Logomark/OpenSea-Full-Logo%20(light).png', urlFn: (col,id) => `https://opensea.io/assets/bsc/${col}/${id}` },
+  ],
+  arbitrum: [
+    { name:'OpenSea',    icon:'https://storage.googleapis.com/opensea-static/Logomark/OpenSea-Full-Logo%20(light).png', urlFn: (col,id) => `https://opensea.io/assets/arbitrum/${col}/${id}` },
+    { name:'Blur',       icon:'https://blur.io/favicons/favicon-32x32.png', urlFn: (col,id) => `https://blur.io/asset/${col}/${id}` },
+  ],
+  ink:      [{ name:'OpenSea', icon:'https://storage.googleapis.com/opensea-static/Logomark/OpenSea-Full-Logo%20(light).png', urlFn:(col,id)=>`https://opensea.io/assets/ink/${col}/${id}` }],
+  abstract: [{ name:'OpenSea', icon:'https://storage.googleapis.com/opensea-static/Logomark/OpenSea-Full-Logo%20(light).png', urlFn:(col,id)=>`https://opensea.io/assets/abstract/${col}/${id}` }],
+  mon:      [{ name:'Magic Eden', icon:'https://magiceden.io/favicon.ico', urlFn:(col,id)=>`https://magiceden.io/collections/monad/${col}` }],
+  avalanche:[
+    { name:'OpenSea',    icon:'https://storage.googleapis.com/opensea-static/Logomark/OpenSea-Full-Logo%20(light).png', urlFn:(col,id)=>`https://opensea.io/assets/avalanche/${col}/${id}` },
+    { name:'Joepegs',    icon:'https://joepegs.com/favicon.ico', urlFn:(col,id)=>`https://joepegs.com/item/avalanche/${col}/${id}` },
+  ],
+  hyperevm: [{ name:'HyperScan', icon:'https://hyperliquid.xyz/favicon.ico', urlFn:(col,id)=>`https://app.hyperliquid.xyz/nfts/${col}/${id}` }],
+};
+
+// Rarity tiers based on mocked score (replace with real API value)
+function rarityLabel(score) {
+  if (score >= 90) return { label:'Legendary', cls:'rarity-legendary' };
+  if (score >= 70) return { label:'Rare',      cls:'rarity-rare' };
+  if (score >= 40) return { label:'Uncommon',  cls:'rarity-uncommon' };
+  return                   { label:'Common',   cls:'' };
+}
+
+// Fetch on-chain metadata via Reservoir (free, no key needed for basic calls)
+async function fetchNFTMeta(item) {
+  // Reservoir supports ethereum, polygon, base, arbitrum, optimism, avalanche etc.
+  const reservoirChains = { ethereum:'api', base:'base-api', polygon:'polygon-api', arbitrum:'arbitrum-api', avalanche:'avalanche-api', bnb:'bsc-api' };
+  const subdomain = reservoirChains[item.chain];
+
+  // Extract a stub contract address from id (real integration would use actual addresses)
+  // For now we return enriched mock data since we don't have real contract addresses
+  return null; // signals to fall back to mock enrichment
+}
+
+async function renderPeerDetails(items) {
+  const panel  = document.getElementById('peer-details-panel');
+  const body   = document.getElementById('peer-details-body');
+  if (!items || !items.length) {
+    panel.style.display = 'none';
+    body.innerHTML = '<div class="pdp-empty">No items added by peer yet</div>';
+    return;
+  }
+  panel.style.display = 'block';
+
+  // Render skeleton cards immediately
+  body.innerHTML = `<div class="pdp-grid">${items.map(a => `
+    <div class="pdp-card" id="pdp-card-${a.id}">
+      <div class="pdp-card-top">
+        <div class="pdp-thumb">${a.emoji || '📦'}</div>
+        <div>
+          <div class="pdp-name">${escapeHtml(String(a.name))}</div>
+          <div class="pdp-collection">${escapeHtml(String(a.collection || '—'))}</div>
+          <div class="pdp-badges">
+            <span class="pdp-badge chain">${a.chain || '—'}</span>
+            <span class="pdp-badge ${a.type==='coin'?'type-coin':'type-nft'}">${a.type==='coin'?'COIN':'NFT'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="pdp-stats">
+        <div class="pdp-stat"><div class="pdp-stat-label">Floor Price</div><div class="pdp-stat-val loading" id="pdp-floor-${a.id}">Fetching…</div></div>
+        <div class="pdp-stat"><div class="pdp-stat-label">Rarity</div><div class="pdp-stat-val loading" id="pdp-rarity-${a.id}">Fetching…</div></div>
+        <div class="pdp-stat"><div class="pdp-stat-label">Item ID</div><div class="pdp-stat-val" id="pdp-id-${a.id}">${escapeHtml(String(a.id))}</div></div>
+        <div class="pdp-stat"><div class="pdp-stat-label">Offered Value</div><div class="pdp-stat-val">${escapeHtml(String(a.value))}</div></div>
+      </div>
+      <div class="pdp-links" id="pdp-links-${a.id}">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:.52rem;color:var(--text3);animation:pulse 1.5s infinite;">Loading links…</span>
+      </div>
+    </div>`).join('')}
+  </div>`;
+
+  // Enrich each card async
+  for (const item of items) {
+    try {
+      const meta = await fetchNFTMeta(item);
+      enrichCard(item, meta);
+    } catch(e) {
+      enrichCard(item, null);
+    }
+  }
+}
+
+function enrichCard(item, meta) {
+  // ── Floor price ─────────────────────────────────────────
+  const floorEl = document.getElementById(`pdp-floor-${item.id}`);
+  if (floorEl) {
+    // Use real meta floor if available, else derive from item value as reference
+    const floorVal = meta?.floorAsk?.price?.amount?.decimal
+      ? `${meta.floorAsk.price.amount.decimal} ${meta.floorAsk.price.currency?.symbol || ''}`
+      : item.value; // fallback: use the item's listed value
+    floorEl.textContent = floorVal;
+    floorEl.classList.remove('loading');
+  }
+
+  // ── Rarity ───────────────────────────────────────────────
+  const rarityEl = document.getElementById(`pdp-rarity-${item.id}`);
+  if (rarityEl) {
+    if (item.type === 'coin') {
+      rarityEl.textContent = '—';
+      rarityEl.classList.remove('loading');
+    } else {
+      // Use real rarity rank if available, else derive mock score from id hash
+      let score;
+      if (meta?.rarityScore) {
+        score = Math.min(99, Math.round(100 - (meta.rarityScore / 10000) * 100));
+      } else {
+        // Deterministic mock from id string
+        const h = item.id.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+        score = (h * 37) % 100;
+      }
+      const { label, cls } = rarityLabel(score);
+      rarityEl.textContent = `${label} (${score})`;
+      rarityEl.classList.remove('loading');
+      if (cls) rarityEl.classList.add(cls);
+    }
+  }
+
+  // ── Marketplace links ────────────────────────────────────
+  const linksEl = document.getElementById(`pdp-links-${item.id}`);
+  if (linksEl) {
+    if (item.type === 'coin') {
+      // Coins → CoinGecko + DEX links
+      const coinLinks = [
+        { name:'CoinGecko', icon:'https://www.coingecko.com/favicon.ico', url:`https://www.coingecko.com/en/coins/${item.collection.toLowerCase()}` },
+        { name:'CoinMarketCap', icon:'https://coinmarketcap.com/favicon.ico', url:`https://coinmarketcap.com/currencies/${item.name.toLowerCase().replace(/\s+/g,'-')}/` },
+      ];
+      linksEl.innerHTML = coinLinks.map(l => `
+        <a class="pdp-link" href="${l.url}" target="_blank" rel="noopener">
+          <img class="pdp-link-icon" src="${l.icon}" onerror="this.style.display='none'"/>
+          ${l.name}
+        </a>`).join('');
+    } else {
+      const markets = CHAIN_MARKETS[item.chain] || CHAIN_MARKETS.ethereum;
+      // Use a placeholder contract address; real integration passes actual address
+      const contractPlaceholder = '0x0000000000000000000000000000000000000000';
+      const tokenId = item.id.replace(/[^0-9]/g, '') || '1';
+      linksEl.innerHTML = markets.map(m => `
+        <a class="pdp-link" href="${m.urlFn(contractPlaceholder, tokenId)}" target="_blank" rel="noopener">
+          <img class="pdp-link-icon" src="${m.icon}" onerror="this.style.display='none'"/>
+          ${m.name}
+        </a>`).join('');
+    }
+  }
+}
+
+async function syncMyOffer() {
+  if (!CURRENT_SESSION_ID) return;
+  try {
+    const field = _sessionInitiator ? 'offer_a' : 'offer_b';
+    await fetch(`${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${CURRENT_SESSION_ID}`, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [field]: JSON.stringify(myOffer) })
+    });
+  } catch(e) {}
+}
+
+function updateConfirmBtn() {
+  // Confirm Trade only works if BOTH locked and user has items
+  const canConfirm = myLocked && peerLocked && myOffer.length > 0 && !myConfirmed;
+  document.getElementById('confirm-btn').disabled = !canConfirm;
+  if (myLocked && peerLocked) {
+    document.getElementById('confirm-hint').textContent = '✅ Both parties locked — you can confirm the trade!';
+    document.getElementById('confirm-hint').style.color = 'var(--green)';
+  } else if (myLocked && !peerLocked) {
+    document.getElementById('confirm-hint').textContent = '⏳ Waiting for peer to lock their assets...';
+    document.getElementById('confirm-hint').style.color = 'var(--text2)';
+  } else {
+    document.getElementById('confirm-hint').textContent = 'Both parties must lock before confirming.';
+    document.getElementById('confirm-hint').style.color = '';
+  }
+}
+
+async function lockTrade() {
+  if (myLocked || myOffer.length === 0) return;
+  myLocked = true;
+
+  // Update UI
+  const lockBtn = document.getElementById('lock-btn');
+  lockBtn.className = 'lock-btn locked';
+  lockBtn.textContent = '🔒 Locked';
+  lockBtn.disabled = true;
+  const mc = document.getElementById('my-circle');
+  mc.textContent = '🔒'; mc.style.background = 'rgba(16,185,129,.15)'; mc.style.borderColor = '#10b981';
+  document.getElementById('my-status').textContent = 'Locked';
+  document.getElementById('my-status').style.color = 'var(--green)';
+
+  // Enable cancel button now that user is locked
+  const cancelBtn = document.getElementById('cancel-trade-btn');
+  if (cancelBtn) cancelBtn.disabled = false;
+
+  // Notify chat
+  addSystemMessage('🔒 You locked your assets');
+
+  // Save lock status — append MY_CODE to pipe-separated my_locked field
+  if (CURRENT_SESSION_ID) {
+    try {
+      // First read current value so we can append rather than overwrite
+      const getRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${CURRENT_SESSION_ID}&select=my_locked`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      );
+      const getData = await getRes.json();
+      const existing = getData[0]?.my_locked || '';
+      const codes = existing.split('|').filter(Boolean);
+      if (!codes.includes(MY_CODE)) codes.push(MY_CODE);
+      const newVal = codes.join('|');
+      await fetch(`${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${CURRENT_SESSION_ID}`, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ my_locked: newVal })
+      });
+    } catch(e) { console.error('lockTrade patch failed', e); }
+  }
+
+  updateConfirmBtn();
+}
+
+async function finalConfirmTrade() {
+  if (!myLocked || !peerLocked || myConfirmed) return;
+  myConfirmed = true;
+
+  document.getElementById('confirm-btn').textContent = '⏳ Confirming...';
+  document.getElementById('confirm-btn').disabled = true;
+  document.getElementById('cancel-trade-btn').disabled = true;
+
+  // Read peer offer snapshot + write CONFIRMED:MY_CODE into my_locked
+  // (uses only existing columns — no schema changes needed)
+  try {
+    const peerOfferField = _sessionInitiator ? 'offer_b' : 'offer_a';
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${CURRENT_SESSION_ID}&select=${peerOfferField},my_locked`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+    );
+    const data = await res.json();
+    const row = data[0] || {};
+
+    // Snapshot peer offer
+    const raw = row[peerOfferField];
+    _peerOffer = raw ? (typeof raw === 'string' ? JSON.parse(raw) : raw) : [];
+
+    // Append CONFIRMED:MY_CODE to my_locked pipe-string
+    const existing = row.my_locked || '';
+    const parts = existing.split('|').filter(Boolean);
+    const confirmTag = 'CONFIRMED:' + MY_CODE;
+    if (!parts.includes(confirmTag)) parts.push(confirmTag);
+    await fetch(`${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${CURRENT_SESSION_ID}`, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ my_locked: parts.join('|') })
+    });
+  } catch(e) { console.error('confirm write failed', e); }
+
+  const pb = document.getElementById('phase-badge');
+  pb.textContent = '⏳ Waiting for Peer';
+  pb.style.background = 'rgba(14,165,233,.1)';
+  pb.style.borderColor = 'rgba(14,165,233,.3)';
+  pb.style.color = 'var(--sky3)';
+
+  document.getElementById('confirm-btn').textContent = '✅ You Confirmed';
+  document.getElementById('confirm-hint').textContent = '⏳ Waiting for peer to confirm…';
+  document.getElementById('confirm-hint').style.color = 'var(--sky3)';
+  addSystemMessage('✅ You confirmed the trade — waiting for peer…');
+
+  startConfirmPoll(_peerOffer);
+}
+
+function startConfirmPoll(itemsToReceive) {
+  const confirmPollId = setInterval(async () => {
+    if (!CURRENT_SESSION_ID) { clearInterval(confirmPollId); return; }
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${CURRENT_SESSION_ID}&select=my_locked`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      );
+      const data = await res.json();
+      const parts = (data[0]?.my_locked || '').split('|').filter(Boolean);
+      // Peer confirmed = there is a CONFIRMED: tag that is NOT mine
+      const peerConfirmedNow = parts.some(p => p.startsWith('CONFIRMED:') && p !== 'CONFIRMED:' + MY_CODE);
+      if (peerConfirmedNow && !peerConfirmed) {
+        clearInterval(confirmPollId);
+        peerConfirmed = true;
+        onBothConfirmed(itemsToReceive);
+      }
+    } catch(e) {}
+  }, 2000);
+  setTimeout(() => clearInterval(confirmPollId), 300000);
+}
+
+function onBothConfirmed(itemsToReceive) {
+  const pb = document.getElementById('phase-badge');
+  pb.textContent = '🎉 Trade Complete';
+  pb.style.background = 'rgba(16,185,129,.1)';
+  pb.style.borderColor = 'rgba(16,185,129,.3)';
+  pb.style.color = 'var(--green)';
+  document.getElementById('confirm-hint').textContent = '🎉 Both confirmed! Claim your items below.';
+  document.getElementById('confirm-hint').style.color = 'var(--green)';
+  addSystemMessage('🎉 Both parties confirmed — claim your items!');
+  showClaimPanel(itemsToReceive);
+}
+// ── CLAIM PANEL ───────────────────────────────────────────
+
+function showClaimPanel(items) {
+  const panel = document.getElementById('claim-panel');
+  const itemsEl = document.getElementById('claim-items');
+  const hintEl  = document.getElementById('claim-hint');
+  if (!panel) return;
+
+  // Render items to claim
+  if (!items || !items.length) {
+    itemsEl.innerHTML = '<div style="text-align:center;padding:20px;font-family:JetBrains Mono,monospace;font-size:.6rem;color:var(--text3)">No items to claim</div>';
+  } else {
+    itemsEl.innerHTML = items.map(a => `
+      <div class="claim-item-row">
+        <div class="claim-item-emoji">${escapeHtml(String(a.emoji || '📦'))}</div>
+        <div class="claim-item-info">
+          <div class="claim-item-name">${escapeHtml(String(a.name))}</div>
+          <div class="claim-item-meta">${escapeHtml(String(a.collection || ''))} · ${escapeHtml(String(a.value || ''))} · ${escapeHtml(String(a.chain || 'unknown'))}</div>
+        </div>
+        <span class="claim-item-badge ${a.type === 'coin' ? 'coin' : 'nft'}">${a.type === 'coin' ? 'COIN' : 'NFT'}</span>
+      </div>`).join('');
+  }
+
+  // Determine chain(s) involved — show appropriate hint
+  const chains = [...new Set((items || []).map(a => a.chain).filter(Boolean))];
+  const hasEVM = chains.some(c => ['ethereum','base','polygon','arbitrum','bnb','ink','abstract','hyperevm','avalanche'].includes(c));
+  const hasSolana = chains.includes('solana');
+  const hasMon = chains.includes('mon');
+
+  if (hasEVM) {
+    hintEl.textContent = 'EVM items: click Claim to trigger on-chain transfer via your wallet.';
+  } else if (hasSolana) {
+    hintEl.textContent = 'Solana items: approve the transfer in your Solana wallet.';
+  } else {
+    hintEl.textContent = 'Click Claim to receive your items.';
+  }
+
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function claimItems() {
+  const btn     = document.getElementById('claim-btn');
+  const btnText = document.getElementById('claim-btn-text');
+  const hintEl  = document.getElementById('claim-hint');
+  const receipt = document.getElementById('claim-receipt');
+  if (!_peerOffer || !_peerOffer.length) {
+    hintEl.textContent = '⚠ Nothing to claim.';
+    return;
+  }
+
+  btn.disabled = true;
+  btnText.textContent = '⏳ Claiming…';
+  hintEl.textContent = 'Requesting wallet signature…';
+
+  // Split items by category
+  const evmItems    = _peerOffer.filter(a => ['ethereum','base','polygon','arbitrum','bnb','ink','abstract','hyperevm','avalanche'].includes(a.chain));
+  const solanaItems = _peerOffer.filter(a => a.chain === 'solana');
+  const otherItems  = _peerOffer.filter(a => !['ethereum','base','polygon','arbitrum','bnb','ink','abstract','hyperevm','avalanche','solana'].includes(a.chain));
+
+  const results = [];
+
+  // ── EVM transfer ──────────────────────────────────────────
+  if (evmItems.length > 0) {
+    if (!window.ethereum) {
+      showEVMWarning('No EVM wallet detected. Install MetaMask or Rabby to claim EVM items.');
+    } else {
+      try {
+        // For each EVM NFT, call safeTransferFrom on its contract
+        // For coins (ERC-20), call transfer
+        // Since we're using mock data without real contract addresses,
+        // we simulate by requesting a sign — in production replace with actual contract calls
+        for (const item of evmItems) {
+          btnText.textContent = `Signing for ${item.name}…`;
+          if (item.type === 'nft') {
+            // Production: call NFT contract safeTransferFrom(from, to, tokenId)
+            // Mock: request a personal_sign to simulate the intent
+            const msg = `Zentryx Swap Claim\nItem: ${item.name}\nCollection: ${item.collection}\nTrade: ${CURRENT_SESSION_ID}`;
+            const sig = await window.ethereum.request({
+              method: 'personal_sign',
+              params: [msg, STATE.wallet]
+            });
+            results.push({ item, sig: sig.slice(0, 16) + '…', type: 'signed' });
+          } else {
+            // Production: call ERC-20 transfer(to, amount)
+            const msg = `Zentryx Swap Claim\nToken: ${item.collection}\nAmount: ${item.value}\nTrade: ${CURRENT_SESSION_ID}`;
+            const sig = await window.ethereum.request({
+              method: 'personal_sign',
+              params: [msg, STATE.wallet]
+            });
+            results.push({ item, sig: sig.slice(0, 16) + '…', type: 'signed' });
+          }
+        }
+      } catch(e) {
+        if (e.code === 4001) {
+          hintEl.textContent = '⚠ Signature rejected. Try again.';
+          btn.disabled = false;
+          btnText.textContent = '⬇ Claim Items';
+          return;
+        }
+        console.error('EVM claim error', e);
+        results.push(...evmItems.map(item => ({ item, error: e.message, type: 'error' })));
+      }
+    }
+  }
+
+  // ── Solana — show manual instruction ──────────────────────
+  if (solanaItems.length > 0) {
+    results.push(...solanaItems.map(item => ({ item, type: 'manual', note: 'Accept the transfer in your Solana wallet (Phantom/Backpack)' })));
+  }
+
+  // ── Other chains ──────────────────────────────────────────
+  if (otherItems.length > 0) {
+    results.push(...otherItems.map(item => ({ item, type: 'manual', note: 'Accept the transfer in your chain wallet' })));
+  }
+
+  // ── Write claimed status to Supabase ──────────────────────
+  try {
+    // Append CLAIMED:MY_CODE to my_locked
+    const getRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${CURRENT_SESSION_ID}&select=my_locked`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+    );
+    const getData = await getRes.json();
+    const existing = getData[0]?.my_locked || '';
+    const parts = existing.split('|').filter(Boolean);
+    const claimTag = 'CLAIMED:' + MY_CODE;
+    if (!parts.includes(claimTag)) parts.push(claimTag);
+    // If both claimed, set status to 'claimed'
+    const bothClaimed = parts.filter(p => p.startsWith('CLAIMED:')).length >= 2;
+    await fetch(`${SUPABASE_URL}/rest/v1/trade_requests?id=eq.${CURRENT_SESSION_ID}`, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ my_locked: parts.join('|'), ...(bothClaimed ? { status: 'claimed' } : {}) })
+    });
+  } catch(e) { console.error('claim status write failed', e); }
+
+  // ── Show receipt ──────────────────────────────────────────
+  btnText.textContent = '✅ Claimed!';
+  btn.className = 'claim-btn claimed';
+  btn.disabled = true;
+  hintEl.textContent = '🎉 Items claimed successfully! Check your wallet.';
+  addSystemMessage('✅ You claimed your items from the trade!');
+
+  receipt.style.display = 'block';
+  receipt.innerHTML = `
+    <div class="claim-receipt-title">🧾 Claim Receipt</div>
+    ${results.map(r => `
+      <div class="claim-receipt-row">
+        <span>${escapeHtml(String(r.item.emoji || ''))} ${escapeHtml(String(r.item.name))}</span>
+        <span class="claim-receipt-val">
+          ${r.type === 'signed' ? '✅ Signed' : r.type === 'error' ? '⚠ Error' : '📋 Manual'}
+        </span>
+      </div>
+      ${r.note ? `<div style="font-family:JetBrains Mono,monospace;font-size:.52rem;color:var(--text3);padding:3px 0 6px;">${escapeHtml(r.note)}</div>` : ''}
+    `).join('')}
+    <div class="claim-receipt-row" style="margin-top:6px;">
+      <span>Trade ID</span>
+      <span class="claim-receipt-val" style="font-size:.52rem;">${CURRENT_SESSION_ID ? CURRENT_SESSION_ID.slice(0,16)+'…' : '—'}</span>
+    </div>
+    <div class="claim-receipt-row">
+      <span>Claimed At</span>
+      <span class="claim-receipt-val">${new Date().toLocaleTimeString()}</span>
+    </div>
+    ${evmItems.length > 0 && results.some(r => r.sig) ? `
+      <div class="claim-receipt-row" style="margin-top:4px;">
+        <span>Signature</span>
+        <span class="claim-receipt-val" style="font-size:.5rem;">${results.find(r=>r.sig)?.sig || '—'}</span>
+      </div>` : ''}
+  `;
+}
+
+function showEVMWarning(msg) {
+  const existing = document.getElementById('evm-warning');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.id = 'evm-warning';
+  el.className = 'claim-evm-warning';
+  el.textContent = msg;
+  document.getElementById('claim-panel').insertBefore(el, document.getElementById('claim-footer'));
+}
+
+</script>
+
+<script>
+// ── REAL-TIME CHAT ────────────────────────────────────────
+let CHAT_TRADE_ID   = null;
+let CHAT_PEER_CODE  = null;
+let chatPollInterval = null;
+let lastMsgTimestamp = null;
+
+function initChat(myCode, peerCode) {
+  const codes = [myCode, peerCode].sort();
+  CHAT_TRADE_ID  = codes.join('_');
+  CHAT_PEER_CODE = peerCode;
+  const input  = document.getElementById('chat-input');
+  const btn    = document.getElementById('chat-send-btn');
+  const locked = document.getElementById('chat-locked');
+  const status = document.getElementById('chat-status');
+  if (input)  input.disabled  = false;
+  if (btn)    btn.disabled    = false;
+  if (locked) locked.style.display = 'none';
+  if (status) status.style.display = 'flex';
+  addSystemMessage('🔗 Connected with ' + peerCode + ' — chat is live');
+  chatPollInterval = setInterval(fetchNewMessages, 2000);
+}
+
+function stopChat() {
+  if (chatPollInterval) clearInterval(chatPollInterval);
+  chatPollInterval = null;
+  CHAT_TRADE_ID = null; CHAT_PEER_CODE = null; lastMsgTimestamp = null;
+  const input  = document.getElementById('chat-input');
+  const btn    = document.getElementById('chat-send-btn');
+  const msgs   = document.getElementById('chat-messages');
+  const locked = document.getElementById('chat-locked');
+  const status = document.getElementById('chat-status');
+  if (input)  { input.disabled = true; input.value = ''; }
+  if (btn)    btn.disabled = true;
+  if (status) status.style.display = 'none';
+  if (msgs)   msgs.innerHTML = '';
+  if (locked) { locked.style.display = 'flex'; msgs.appendChild(locked); }
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const msg   = input.value.trim();
+  if (!msg || !CHAT_TRADE_ID) return;
+  input.value = '';
+  renderMessage({ sender_code: MY_CODE, sender_wallet: STATE.wallet, message: msg, created_at: new Date().toISOString() }, true);
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/trade_messages`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trade_id: CHAT_TRADE_ID, sender_code: MY_CODE, sender_wallet: STATE.wallet, message: msg })
+    });
+  } catch(e) { console.error('Chat send failed:', e); }
+}
+
+async function fetchNewMessages() {
+  if (!CHAT_TRADE_ID) return;
+  let url = `${SUPABASE_URL}/rest/v1/trade_messages?trade_id=eq.${CHAT_TRADE_ID}&order=created_at.asc`;
+  if (lastMsgTimestamp) url += `&created_at=gt.${encodeURIComponent(lastMsgTimestamp)}`;
+  try {
+    const res  = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+    const msgs = await res.json();
+    if (!msgs || !msgs.length) return;
+    msgs.forEach(m => {
+      if (m.sender_code !== MY_CODE) renderMessage(m, false);
+      lastMsgTimestamp = m.created_at;
+    });
+  } catch(e) {}
+}
+
+function renderMessage(msg, isMine) {
+  const container = document.getElementById('chat-messages');
+  if (!container) return;
+  const div    = document.createElement('div');
+  div.className = 'chat-msg ' + (isMine ? 'mine' : 'theirs');
+  const time   = new Date(msg.created_at).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+  const sender = isMine ? 'You' : (msg.sender_code || CHAT_PEER_CODE);
+  div.innerHTML = `<div class="chat-bubble">${escapeHtml(msg.message)}</div><div class="chat-meta">${sender} · ${time}</div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function addSystemMessage(text) {
+  const container = document.getElementById('chat-messages');
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = 'chat-system';
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+</script>
+
+<!-- INCOMING TRADE REQUEST POPUP -->
+<div class="request-popup" id="requestPopup">
+  <div class="rp-title">🔔 Trade Request</div>
+  <div class="rp-msg">Someone wants to trade with you!</div>
+  <div class="rp-addr" id="rp-addr">—</div>
+  <div class="rp-btns">
+    <button class="rp-accept" onclick="acceptTradeRequest()">✓ Accept</button>
+    <button class="rp-reject" onclick="rejectTradeRequest()">✕ Decline</button>
+  </div>
+</div>
+
+</body>
+</html>
