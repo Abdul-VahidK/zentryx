@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pixel Painter — Zentryx</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='8' fill='%23000'/><text y='82' x='8' font-size='80' font-family='Arial' font-weight='900' fill='%2300eeff'>Z</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#dff0fa; --surface:#f5fbff; --surface2:#f0f8ff;
+  --border:#b8d8f0; --border2:#90c4e8;
+  --sky:#38bdf8; --sky2:#0ea5e9; --sky3:#0284c7;
+  --cyan:#06b6d4; --gold:#f59e0b; --green:#10b981; --red:#ef4444;
+  --text:#0f2a3f; --text2:#3a6080; --text3:#7aaac8;
+  --dark:#0f1e2e; --glow-sky:0 0 28px rgba(56,189,248,0.45);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;}
+
+header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:54px;background:rgba(245,251,255,0.98);border-bottom:1px solid var(--border);box-shadow:0 2px 12px rgba(56,189,248,0.1);flex-shrink:0;}
+header::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--sky),var(--cyan),transparent);opacity:0.8;}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-z{width:34px;height:34px;background:linear-gradient(135deg,#e0f4ff,#fff);border:1.5px solid var(--cyan);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-size:1.3rem;font-weight:900;color:var(--cyan);box-shadow:0 0 14px rgba(0,238,255,0.25);}
+.logo-name{font-family:'Sora',sans-serif;font-size:1.2rem;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--dark);}
+.chain-pill{display:flex;align-items:center;gap:7px;background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.3);padding:5px 12px;border-radius:100px;font-size:0.68rem;font-family:'JetBrains Mono',monospace;color:var(--sky3);letter-spacing:1px;}
+.chain-live{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.back-link{display:flex;align-items:center;gap:5px;font-family:'Sora',sans-serif;font-size:0.75rem;font-weight:600;text-decoration:none;color:var(--sky3);padding:5px 10px;border:1px solid var(--border);border-radius:6px;transition:all 0.15s;background:rgba(56,189,248,0.05);}
+.back-link:hover{background:rgba(56,189,248,0.12);border-color:var(--sky2);}
+.wallet-btn{display:flex;align-items:center;gap:6px;padding:7px 16px;background:linear-gradient(135deg,var(--sky2),var(--sky3));border:none;border-radius:6px;font-family:'Sora',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#fff;cursor:pointer;transition:all 0.15s;}
+.wallet-btn:hover{transform:translateY(-1px);box-shadow:var(--glow-sky);}
+.wallet-btn.connected{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:var(--green);}
+
+.app{display:flex;height:calc(100vh - 54px);}
+
+/* SIDEBAR */
+.sidebar{width:210px;flex-shrink:0;background:rgba(245,251,255,0.98);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+.sb-sec{padding:12px 14px 10px;border-bottom:1px solid var(--border);}
+.sb-title{font-family:'JetBrains Mono',monospace;font-size:0.52rem;letter-spacing:2.5px;color:var(--text3);text-transform:uppercase;margin-bottom:10px;}
+.xp-num{font-family:'Sora',sans-serif;font-size:2.4rem;font-weight:900;color:var(--sky3);line-height:1;text-align:center;text-shadow:0 0 20px rgba(14,165,233,0.2);}
+.xp-unit{font-family:'JetBrains Mono',monospace;font-size:0.5rem;letter-spacing:2px;color:var(--text3);text-align:center;margin-top:3px;}
+.xp-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:8px;}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--sky2),var(--cyan));border-radius:2px;transition:width 0.7s ease;}
+.palette{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+.swatch{width:100%;aspect-ratio:1;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all 0.12s;position:relative;}
+.swatch:hover{transform:scale(1.08);box-shadow:0 3px 10px rgba(0,0,0,0.18);}
+.swatch.sel{border-color:#fff;box-shadow:0 0 0 2.5px var(--sky2),0 3px 12px rgba(0,0,0,0.22);transform:scale(1.1);}
+.swatch.sel::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.72rem;font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,0.5);}
+.cp{display:flex;align-items:center;gap:8px;margin-top:8px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;}
+.cp-dot{width:18px;height:18px;border-radius:4px;flex-shrink:0;border:1px solid rgba(0,0,0,0.1);}
+.cp-name{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text2);}
+.pix-counter{background:rgba(14,165,233,0.07);border:1px solid rgba(14,165,233,0.18);border-radius:8px;padding:10px;text-align:center;}
+.pix-big{font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:800;color:var(--sky3);}
+.pix-lbl{font-family:'JetBrains Mono',monospace;font-size:0.5rem;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-top:2px;}
+.pix-tot{font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--text3);margin-top:3px;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(184,216,240,0.35);}
+.stat-row:last-child{border:none;}
+.sk{font-size:0.7rem;color:var(--text2);}
+.sv{font-size:0.72rem;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text);}
+.sv.hi{color:var(--gold);}
+.hist-list{display:flex;flex-direction:column;gap:4px;max-height:150px;overflow-y:auto;}
+.hi{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:var(--surface2);animation:slideIn 0.2s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateX(-5px);}to{opacity:1;transform:none;}}
+.hi-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.hi-coord{font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--text3);}
+.hi-xp{font-family:'JetBrains Mono',monospace;font-size:0.68rem;font-weight:700;margin-left:auto;}
+.hi-xp.j{color:var(--gold);}.hi-xp.g{color:var(--sky2);}.hi-xp.ok{color:var(--green);}.hi-xp.b{color:var(--text3);}
+
+/* CANVAS AREA */
+.canvas-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{height:38px;flex-shrink:0;background:rgba(240,248,255,0.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;}
+.tb-l{font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--text3);letter-spacing:1.5px;white-space:nowrap;}
+.tb-r{display:flex;align-items:center;gap:8px;}
+.tb-hint{font-family:'JetBrains Mono',monospace;font-size:0.53rem;color:var(--text3);opacity:0.65;}
+.coords{font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--sky3);min-width:130px;text-align:right;}
+.zbtns{display:flex;align-items:center;gap:3px;}
+.zbtn{background:var(--surface2);border:1px solid var(--border);border-radius:5px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.95rem;color:var(--text2);transition:all 0.12s;}
+.zbtn:hover{border-color:var(--sky2);color:var(--sky2);}
+.zbtn.w{width:auto;padding:0 8px;font-size:0.56rem;font-family:'JetBrains Mono',monospace;letter-spacing:1px;}
+.zlbl{font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--text3);min-width:32px;text-align:center;}
+
+/* THE VIEWPORT — pan surface */
+.viewport{
+  flex:1;
+  overflow:hidden;
+  position:relative;
+  background-color:#cde4f2;
+  background-image:
+    linear-gradient(45deg,#b8d4e8 25%,transparent 25%),
+    linear-gradient(-45deg,#b8d4e8 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#b8d4e8 75%),
+    linear-gradient(-45deg,transparent 75%,#b8d4e8 75%);
+  background-size:20px 20px;
+  background-position:0 0,0 10px,10px -10px,-10px 0;
+  cursor:crosshair;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.viewport.panning{cursor:grabbing!important;}
+#canvas{
+  position:absolute;
+  top:0;left:0;
+  transform-origin:0 0;
+  image-rendering:pixelated;
+  image-rendering:crisp-edges;
+}
+
+/* TX bar */
+.txbar{height:0;overflow:hidden;font-family:'JetBrains Mono',monospace;font-size:0.7rem;display:flex;align-items:center;gap:8px;padding:0 16px;flex-shrink:0;transition:height 0.2s;}
+.txbar.show{height:34px;}
+.txbar.pending{background:rgba(245,158,11,0.07);border-top:1px solid rgba(245,158,11,0.2);color:var(--gold);}
+.txbar.ok{background:rgba(16,185,129,0.07);border-top:1px solid rgba(16,185,129,0.2);color:var(--green);}
+.txbar.err{background:rgba(239,68,68,0.07);border-top:1px solid rgba(239,68,68,0.2);color:var(--red);}
+.tx-sp{width:11px;height:11px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Tooltip */
+.tip{position:fixed;background:rgba(15,30,46,0.9);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--sky2);pointer-events:none;z-index:999;white-space:nowrap;display:none;}
+
+/* XP popup */
+.xp-pop{position:fixed;pointer-events:none;font-family:'Sora',sans-serif;font-size:2rem;font-weight:900;color:var(--gold);text-shadow:0 0 20px rgba(245,158,11,0.5);z-index:9998;animation:floatUp 1.8s ease forwards;}
+@keyframes floatUp{0%{opacity:0;transform:translateY(0) scale(0.5);}15%{opacity:1;transform:translateY(-18px) scale(1.2);}65%{opacity:1;transform:translateY(-60px);}100%{opacity:0;transform:translateY(-100px) scale(0.85);}}
+.cf{position:fixed;pointer-events:none;z-index:9997;border-radius:2px;animation:cffall 1.3s ease forwards;}
+@keyframes cffall{0%{opacity:1;transform:translateY(0) rotate(0);}100%{opacity:0;transform:translateY(180px) rotate(600deg);}}
+
+/* Pending pixel glow */
+.pend{position:fixed;pointer-events:none;z-index:500;border:2px solid var(--gold);border-radius:1px;box-shadow:0 0 10px rgba(245,158,11,0.6);animation:pendBlink 0.6s ease-in-out infinite;}
+@keyframes pendBlink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+/* Toast */
+.toast{position:fixed;bottom:22px;right:22px;z-index:3000;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:11px 16px;display:flex;align-items:center;gap:10px;font-size:0.78rem;color:var(--text);transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.34,1.3,.64,1);max-width:290px;pointer-events:none;box-shadow:0 4px 16px rgba(56,189,248,0.12);}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-x{margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.9rem;}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(15,30,46,0.55);backdrop-filter:blur(12px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:380px;max-width:95vw;padding:26px;transform:translateY(16px);transition:transform 0.25s cubic-bezier(.34,1.3,.64,1);position:relative;box-shadow:0 20px 60px rgba(14,165,233,0.15);}
+.overlay.open .modal{transform:translateY(0);}
+.modal-title{font-family:'Sora',sans-serif;font-size:1.2rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--dark);margin-bottom:3px;}
+.modal-sub{font-size:0.75rem;color:var(--text2);margin-bottom:18px;line-height:1.5;}
+.modal-x{position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:0.8rem;}
+.wopt{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:7px;cursor:pointer;transition:all 0.12s;background:var(--surface2);}
+.wopt:hover{border-color:var(--sky2);background:rgba(56,189,248,0.05);}
+.wopt-l{display:flex;align-items:center;gap:10px;}
+.wopt-ic{width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0;}
+.wopt-nm{font-size:0.85rem;font-weight:600;color:var(--text);}
+.wopt-tg{font-family:'JetBrains Mono',monospace;font-size:0.54rem;padding:2px 6px;border-radius:4px;letter-spacing:1px;}
+.wopt-tg.f{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:var(--green);}
+.wopt-tg.n{background:rgba(120,170,200,0.1);border:1px solid var(--border2);color:var(--text3);}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index.html">
+    <div class="logo-z">Z</div>
+    <div class="logo-name">Zentryx</div>
+  </a>
+  <div class="chain-pill"><div class="chain-live"></div>INK MAINNET</div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <a class="back-link" href="ink-chain.html">&#8592; Back</a>
+    <button class="wallet-btn" id="walletBtn" onclick="walletBtnClick()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" fill="currentColor"/><path d="M22 11V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2"/></svg>
+      CONNECT
+    </button>
+  </div>
+</header>
+
+<div class="app">
+
+  <div class="sidebar">
+    <div class="sb-sec">
+      <div class="sb-title">Your XP</div>
+      <div class="xp-num" id="xpBig">0</div>
+      <div class="xp-unit">TOTAL XP EARNED</div>
+      <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-title">Paint Colour</div>
+      <div class="palette" id="palette"></div>
+      <div class="cp">
+        <div class="cp-dot" id="cpDot"></div>
+        <span class="cp-name" id="cpName">Select a colour</span>
+      </div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-title">Canvas</div>
+      <div class="pix-counter">
+        <div class="pix-big" id="paintedCount">0</div>
+        <div class="pix-lbl">Pixels Painted</div>
+        <div class="pix-tot">of 100,000 total</div>
+      </div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-title">Session</div>
+      <div class="stat-row"><span class="sk">Pixels Placed</span><span class="sv" id="stPix">0</span></div>
+      <div class="stat-row"><span class="sk">Best XP</span><span class="sv hi" id="stBest">&#8212;</span></div>
+      <div class="stat-row"><span class="sk">Avg XP</span><span class="sv" id="stAvg">&#8212;</span></div>
+    </div>
+    <div class="sb-sec" style="flex:1;border:none;">
+      <div class="sb-title">Recent</div>
+      <div class="hist-list" id="histList">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--text3);padding:8px 0;text-align:center;">No pixels yet</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <div class="topbar">
+      <div class="tb-l">PIXEL PAINTER &middot; INK CHAIN &middot; 1000 &times; 100</div>
+      <div class="tb-r">
+        <span class="tb-hint">DRAG TO PAN &nbsp;&middot;&nbsp; SCROLL TO ZOOM</span>
+        <span class="coords" id="coords">&#8212;</span>
+        <div class="zbtns">
+          <button class="zbtn" onclick="doZoom(-1)">&#8722;</button>
+          <span class="zlbl" id="zlbl">12px</span>
+          <button class="zbtn" onclick="doZoom(1)">+</button>
+          <button class="zbtn w" onclick="goHome()">HOME</button>
+        </div>
+      </div>
+    </div>
+    <div class="viewport" id="vp">
+      <canvas id="pixCanvas"></canvas>
+    </div>
+    <div class="txbar" id="txbar">
+      <div class="tx-sp" id="txsp" style="display:none"></div>
+      <span id="txmsg"></span>
+    </div>
+  </div>
+
+</div>
+
+<div class="tip" id="tip"></div>
+
+<div class="overlay" id="wModal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-x" onclick="closeModal()">&#x2715;</button>
+    <div class="modal-title">Connect Wallet</div>
+    <div class="modal-sub" id="mSub">Connect your wallet to paint pixels on Ink Chain and earn XP.</div>
+    <div id="wList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span id="tIcon">&#128226;</span>
+  <span id="tMsg"></span>
+  <button class="toast-x" onclick="hideToast()">&#x2715;</button>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://wbrspewpvzoziqfinpfd.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndicnNwZXdwdnpvemlxZmlucGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNTQ2MjEsImV4cCI6MjA4OTgzMDYyMX0.j_MgjstUKK6K9DnCEcC4ilIocHY3VNCwMNiT47BrBUo';
+const CONTRACT    = '0x0000000000000000000000000000000000000000';
+const PAINT_SEL   = '0xabcd1234';
+const INK_ID      = '0xdef1';
+
+const COLS=1000, ROWS=100;
+const XP_POOL=[500,200,200,100,100,100,50,50,50,25,25,25];
+const LEVELS=[0,500,1200,2500,5000,10000,20000,40000,75000,130000,200000];
+const COLOURS=[
+  {hex:'#ef4444',name:'Red'},    {hex:'#f97316',name:'Orange'},
+  {hex:'#eab308',name:'Yellow'}, {hex:'#22c55e',name:'Green'},
+  {hex:'#06b6d4',name:'Cyan'},   {hex:'#3b82f6',name:'Blue'},
+  {hex:'#8b5cf6',name:'Purple'}, {hex:'#ec4899',name:'Pink'},
+  {hex:'#f8fafc',name:'White'},  {hex:'#475569',name:'Grey'},
+  {hex:'#0f172a',name:'Black'},  {hex:'#fbbf24',name:'Gold'},
+];
+
+// State
+const S={connected:false,wallet:null,totalXP:0,placed:0,bestXP:0,history:[],sel:null,pending:null,busy:false};
+const pixMap=new Map();
+
+// Canvas
+const vp=document.getElementById('vp');
+const cv=document.getElementById('pixCanvas');
+const ctx=cv.getContext('2d');
+const STEPS=[2,3,4,5,6,8,10,12,14,16,20,24,32];
+let ps=12, ox=0, oy=0;
+let panning=false,px0=0,py0=0,ox0=0,oy0=0,dragged=false;
+
+function init(){
+  cv.width=COLS*ps; cv.height=ROWS*ps;
+  ox=Math.round((vp.clientWidth-cv.width)/2);
+  oy=Math.round((vp.clientHeight-cv.height)/2);
+  pos(); fullRender();
+}
+
+function pos(){
+  cv.style.transform='translate('+ox+'px,'+oy+'px)';
+  document.getElementById('zlbl').textContent=ps+'px';
+}
+
+function fullRender(){
+  cv.width=COLS*ps; cv.height=ROWS*ps;
+  ctx.fillStyle='#e4f2fa';
+  ctx.fillRect(0,0,cv.width,cv.height);
+  // Grid lines
+  ctx.strokeStyle='rgba(155,200,228,0.6)';
+  ctx.lineWidth=0.5;
+  for(let c=0;c<=COLS;c++){ctx.beginPath();ctx.moveTo(c*ps,0);ctx.lineTo(c*ps,cv.height);ctx.stroke();}
+  for(let r=0;r<=ROWS;r++){ctx.beginPath();ctx.moveTo(0,r*ps);ctx.lineTo(cv.width,r*ps);ctx.stroke();}
+  // Painted pixels
+  pixMap.forEach((hex,idx)=>{
+    const c=idx%COLS, r=Math.floor(idx/COLS);
+    drawCell(c,r,hex);
+  });
+  pos();
+}
+
+function drawCell(c,r,hex){
+  // Fill colour (inset 1px so grid lines stay visible)
+  ctx.fillStyle=hex;
+  ctx.fillRect(c*ps+1,r*ps+1,ps-1,ps-1);
+}
+
+function redrawCell(c,r,hex){
+  // Clear
+  ctx.fillStyle='#e4f2fa';
+  ctx.fillRect(c*ps,r*ps,ps,ps);
+  // Grid lines
+  ctx.strokeStyle='rgba(155,200,228,0.6)';
+  ctx.lineWidth=0.5;
+  ctx.strokeRect(c*ps,r*ps,ps,ps);
+  // Colour
+  ctx.fillStyle=hex;
+  ctx.fillRect(c*ps+1,r*ps+1,ps-1,ps-1);
+}
+
+// Zoom
+function doZoom(dir,mx,my){
+  const idx=STEPS.indexOf(ps);
+  const n=Math.max(0,Math.min(STEPS.length-1,idx+dir));
+  if(STEPS[n]===ps)return;
+  if(mx===undefined){mx=vp.clientWidth/2;my=vp.clientHeight/2;}
+  const gx=(mx-ox)/ps, gy=(my-oy)/ps;
+  ps=STEPS[n];
+  cv.width=COLS*ps; cv.height=ROWS*ps;
+  ox=mx-gx*ps; oy=my-gy*ps;
+  fullRender();
+}
+vp.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const r=vp.getBoundingClientRect();
+  doZoom(e.deltaY<0?1:-1,e.clientX-r.left,e.clientY-r.top);
+},{passive:false});
+function goHome(){
+  ps=12; cv.width=COLS*ps; cv.height=ROWS*ps;
+  ox=Math.round((vp.clientWidth-cv.width)/2);
+  oy=Math.round((vp.clientHeight-cv.height)/2);
+  fullRender();
+}
+
+// Pan
+vp.addEventListener('mousedown',e=>{
+  panning=true;dragged=false;
+  px0=e.clientX;py0=e.clientY;ox0=ox;oy0=oy;
+});
+vp.addEventListener('mousemove',e=>{
+  // Coords + tooltip
+  const g=gridAt(e);
+  if(g.on){
+    document.getElementById('coords').textContent='col '+(g.c+1)+', row '+(g.r+1);
+    const tip=document.getElementById('tip');
+    tip.textContent=pixMap.has(g.r*COLS+g.c)?'('+( g.c+1)+','+(g.r+1)+') Painted':'('+(g.c+1)+','+(g.r+1)+') Click to paint';
+    tip.style.display='block';
+    tip.style.left=(e.clientX+14)+'px';
+    tip.style.top=(e.clientY-8)+'px';
+  } else {
+    document.getElementById('coords').textContent='&#8212;';
+    document.getElementById('tip').style.display='none';
+  }
+  // Pan
+  if(!panning||!(e.buttons&1))return;
+  const dx=e.clientX-px0,dy=e.clientY-py0;
+  if(!dragged&&(Math.abs(dx)>4||Math.abs(dy)>4)){dragged=true;vp.classList.add('panning');}
+  if(dragged){ox=ox0+dx;oy=oy0+dy;pos();}
+});
+vp.addEventListener('mouseup',()=>{panning=false;vp.classList.remove('panning');});
+vp.addEventListener('mouseleave',()=>{
+  panning=false;vp.classList.remove('panning');
+  document.getElementById('tip').style.display='none';
+  document.getElementById('coords').textContent='&#8212;';
+});
+vp.addEventListener('contextmenu',e=>e.preventDefault());
+
+// Click to paint
+vp.addEventListener('click',e=>{
+  if(dragged)return;
+  if(S.busy)return;
+  if(S.sel===null){showToast('Select a colour first! 🎨');return;}
+  const g=gridAt(e);
+  if(!g.on)return;
+  if(!S.connected){
+    S.pending={c:g.c,r:g.r};
+    document.getElementById('mSub').textContent='Connect your wallet to paint pixel ('+(g.c+1)+','+(g.r+1)+') on Ink Chain and earn XP.';
+    openModal();return;
+  }
+  paint(g.c,g.r);
+});
+
+function gridAt(e){
+  const rect=vp.getBoundingClientRect();
+  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  const c=Math.floor((mx-ox)/ps),r=Math.floor((my-oy)/ps);
+  return{c,r,on:c>=0&&c<COLS&&r>=0&&r<ROWS};
+}
+
+// Paint
+async function paint(c,r){
+  if(S.busy)return;
+  S.busy=true;
+  const hex=COLOURS[S.sel].hex;
+  S.pending={c,r};
+  showGlow(c,r);
+  showTX('pending','Waiting for wallet confirmation\u2026');
+  try{
+    const pid=r*COLS+c;
+    const ci=parseInt(hex.slice(1),16);
+    const data=PAINT_SEL+pid.toString(16).padStart(64,'0')+ci.toString(16).padStart(64,'0');
+    const txHash=await window.ethereum.request({method:'eth_sendTransaction',params:[{from:S.wallet,to:CONTRACT,value:'0x0',data,chainId:INK_ID,gas:'0x12A00'}]});
+    showTX('pending','Confirming on Ink Chain\u2026');
+    let receipt=null,att=0;
+    while(!receipt&&att<40){await sleep(1100);att++;try{receipt=await window.ethereum.request({method:'eth_getTransactionReceipt',params:[txHash]});}catch(e){}}
+    hideGlow();
+    if(!receipt||receipt.status==='0x0'){showTX('err','Transaction failed');setTimeout(hideTX,3000);S.busy=false;S.pending=null;return;}
+    onDone(c,r,hex);
+  }catch(e){
+    hideGlow();hideTX();
+    if(e.code!==4001)showToast('Transaction rejected');
+    S.busy=false;S.pending=null;
+  }
+}
+
+function onDone(c,r,hex){
+  const idx=r*COLS+c, isNew=!pixMap.has(idx);
+  pixMap.set(idx,hex);
+  redrawCell(c,r,hex);
+  const xp=XP_POOL[Math.floor(Math.random()*XP_POOL.length)];
+  S.totalXP+=xp;S.placed++;
+  if(xp>S.bestXP)S.bestXP=xp;
+  S.history.unshift({c,r,hex,xp});
+  if(S.history.length>30)S.history.pop();
+  xpPop(xp);
+  if(xp>=200)confetti();
+  showTX('ok','\u2713 ('+(c+1)+','+(r+1)+') painted! +'+xp+' XP');
+  setTimeout(hideTX,3500);
+  refreshUI();addHist(c,r,hex,xp);
+  if(isNew)document.getElementById('paintedCount').textContent=pixMap.size.toLocaleString();
+  saveLocal();syncSupa();
+  S.busy=false;S.pending=null;
+}
+
+// Pending glow
+let glowEl=null;
+function showGlow(c,r){
+  hideGlow();
+  const rect=vp.getBoundingClientRect();
+  const sx=rect.left+ox+c*ps, sy=rect.top+oy+r*ps;
+  glowEl=document.createElement('div');glowEl.className='pend';
+  glowEl.style.cssText='left:'+sx+'px;top:'+sy+'px;width:'+ps+'px;height:'+ps+'px;';
+  document.body.appendChild(glowEl);
+}
+function hideGlow(){if(glowEl){glowEl.remove();glowEl=null;}}
+
+// TX bar
+function showTX(t,m){
+  const b=document.getElementById('txbar'),s=document.getElementById('txsp');
+  b.className='txbar show '+t;
+  document.getElementById('txmsg').textContent=m;
+  s.style.display=t==='pending'?'block':'none';
+}
+function hideTX(){document.getElementById('txbar').className='txbar';}
+
+// Supabase
+async function syncSupa(){
+  if(!S.wallet)return;
+  try{
+    await fetch(SUPABASE_URL+'/rest/v1/leaderboard',{method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify({wallet:S.wallet.slice(0,6)+'...'+S.wallet.slice(-4),total_xp:S.totalXP,games_played:S.placed,chain:'ink',updated_at:new Date().toISOString()})
+    });
+  }catch(e){}
+}
+
+// Local storage
+function saveLocal(){
+  if(!S.wallet)return;
+  try{localStorage.setItem('pp_'+S.wallet.slice(0,10),JSON.stringify({totalXP:S.totalXP,placed:S.placed,bestXP:S.bestXP,history:S.history.slice(0,20),pixels:[...pixMap.entries()].slice(0,5000)}));}catch(e){}
+}
+function loadLocal(){
+  if(!S.wallet)return;
+  try{
+    const raw=localStorage.getItem('pp_'+S.wallet.slice(0,10));
+    if(!raw)return;
+    const d=JSON.parse(raw);
+    S.totalXP=d.totalXP||0;S.placed=d.placed||0;S.bestXP=d.bestXP||0;S.history=d.history||[];
+    if(d.pixels&&d.pixels.length){d.pixels.forEach(([i,h])=>pixMap.set(i,h));fullRender();document.getElementById('paintedCount').textContent=pixMap.size.toLocaleString();}
+    refreshUI();
+    if(S.history.length){document.getElementById('histList').innerHTML='';[...S.history].forEach(h=>addHist(h.c,h.r,h.hex,h.xp));}
+  }catch(e){}
+}
+
+// UI
+function refreshUI(){
+  countUp('xpBig',S.totalXP);
+  document.getElementById('stPix').textContent=S.placed;
+  document.getElementById('stBest').textContent=S.bestXP>0?S.bestXP+' XP':'—';
+  document.getElementById('stAvg').textContent=S.placed>0?Math.round(S.totalXP/S.placed)+' XP':'—';
+  let lvl=0;for(let i=0;i<LEVELS.length-1;i++){if(S.totalXP>=LEVELS[i])lvl=i;}
+  const cur=LEVELS[lvl]||0,nxt=LEVELS[lvl+1]||(cur+50000);
+  document.getElementById('xpFill').style.width=Math.min(100,((S.totalXP-cur)/(nxt-cur))*100)+'%';
+}
+function countUp(id,target){
+  const el=document.getElementById(id);if(!el)return;
+  const start=parseInt(el.textContent.replace(/,/g,''))||0;
+  if(start===target)return;
+  const dur=600,t0=performance.now();
+  (function step(now){const t=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-t,3);el.textContent=Math.round(start+(target-start)*e).toLocaleString();if(t<1)requestAnimationFrame(step);})(performance.now());
+}
+function addHist(c,r,hex,xp){
+  const list=document.getElementById('histList');
+  if(S.history.length===1)list.innerHTML='';
+  const cls=xp>=500?'j':xp>=200?'g':xp>=100?'ok':'b';
+  const item=document.createElement('div');item.className='hi';
+  item.innerHTML='<div class="hi-dot" style="background:'+hex+'"></div><span class="hi-coord">('+( c+1)+','+(r+1)+')</span><span class="hi-xp '+cls+'">+'+xp+' XP</span>';
+  list.insertBefore(item,list.firstChild);
+  while(list.children.length>20)list.removeChild(list.lastChild);
+}
+
+// Effects
+function xpPop(xp){
+  const p=document.createElement('div');p.className='xp-pop';
+  if(xp===500)p.style.fontSize='2.6rem';
+  else if(xp>=200)p.style.color='#0ea5e9';
+  else if(xp>=100)p.style.color='#10b981';
+  p.textContent='+'+xp+' XP';
+  p.style.left=(window.innerWidth/2-60)+'px';p.style.top=(window.innerHeight/2-50)+'px';
+  document.body.appendChild(p);setTimeout(()=>p.remove(),1900);
+}
+function confetti(){
+  const cs=['#f59e0b','#38bdf8','#10b981','#0ea5e9','#fbbf24','#ec4899','#8b5cf6'];
+  for(let i=0;i<28;i++)setTimeout(()=>{
+    const p=document.createElement('div');p.className='cf';
+    p.style.cssText='left:'+(window.innerWidth/2+(Math.random()-.5)*160)+'px;top:'+(window.innerHeight/2-30)+'px;width:'+(4+Math.random()*5)+'px;height:'+(4+Math.random()*5)+'px;background:'+cs[Math.floor(Math.random()*cs.length)]+';animation-duration:'+(0.8+Math.random()*0.8)+'s;transform:rotate('+(Math.random()*360)+'deg)';
+    document.body.appendChild(p);setTimeout(()=>p.remove(),2000);
+  },i*18);
+}
+
+// Palette
+function buildPalette(){
+  const g=document.getElementById('palette');g.innerHTML='';
+  COLOURS.forEach((c,i)=>{
+    const s=document.createElement('div');s.className='swatch';s.style.background=c.hex;s.title=c.name;
+    s.addEventListener('click',()=>pickColour(i));g.appendChild(s);
+  });
+  pickColour(5);
+}
+function pickColour(i){
+  S.sel=i;
+  document.querySelectorAll('.swatch').forEach((s,j)=>s.classList.toggle('sel',j===i));
+  document.getElementById('cpDot').style.background=COLOURS[i].hex;
+  document.getElementById('cpName').textContent=COLOURS[i].name;
+}
+
+
+// Wallet — simplified: always attempt eth_requestAccounts, don't open install links when wallet exists
+const WALLETS=[
+  {name:'Rabby Wallet',    icon:'https://raw.githubusercontent.com/RabbyHub/Rabby/develop/src/assets/images/icon-128.png',    install:'https://rabby.io'},
+  {name:'MetaMask',        icon:'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg',                        install:'https://metamask.io'},
+  {name:'Coinbase Wallet', icon:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230052ff'/><circle cx='50' cy='50' r='35' fill='white'/><circle cx='50' cy='50' r='22' fill='%230052ff'/></svg>", install:'https://www.coinbase.com/wallet'},
+  {name:'Other EVM Wallet',icon:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23627eea'/><text y='.9em' font-size='70' x='10'>%F0%9F%8C%90</text></svg>", install:null},
+];
+function openModal(){buildWList();document.getElementById('wModal').classList.add('open');}
+function closeModal(){document.getElementById('wModal').classList.remove('open');}
+function buildWList(){
+  const el=document.getElementById('wList');el.innerHTML='';
+  const hasWallet=!!(window.ethereum||window.phantom?.ethereum);
+  WALLETS.forEach(w=>{
+    const d=document.createElement('div');d.className='wopt';
+    const tag=hasWallet?'<span class="wopt-tg f">&#9679; Ready</span>':(w.install?'<span class="wopt-tg n">Install</span>':'<span class="wopt-tg n">&#8212;</span>');
+    d.innerHTML='<div class="wopt-l"><img src="'+w.icon+'" class="wopt-ic" style="background:#f0f8ff;border:1px solid #b8d8f0;padding:3px;border-radius:7px;" onerror="this.style.display=\'none\'"/><div class="wopt-nm">'+w.name+'</div></div>'+tag;
+    d.onclick=()=>{
+      if(hasWallet){connectWallet();}
+      else if(w.install){window.open(w.install,'_blank');}
+    };
+    el.appendChild(d);
+  });
+}
+async function connectWallet(){
+  const provider=window.phantom?.ethereum||window.ethereum;
+  if(!provider){showToast('No wallet found. Please install MetaMask or Rabby.','\u26A0\uFE0F');return;}
+  try{
+    const accs=await provider.request({method:'eth_requestAccounts'});
+    if(!accs||!accs.length){return;}
+    S.wallet=accs[0];S.connected=true;
+    try{await provider.request({method:'wallet_switchEthereumChain',params:[{chainId:INK_ID}]});}
+    catch(sw){
+      if(sw.code===4902){
+        await provider.request({method:'wallet_addEthereumChain',params:[{
+          chainId:INK_ID,chainName:'Ink Mainnet',
+          nativeCurrency:{name:'ETH',symbol:'ETH',decimals:18},
+          rpcUrls:['https://rpc-qnd.inkonchain.com'],
+          blockExplorerUrls:['https://explorer.inkonchain.com']
+        }]});
+      }
+    }
+    closeModal();onConnected();
+  }catch(e){
+    console.error('Wallet connect:',e);
+    if(e.code!==4001)showToast('Connection failed','\u274C');
+  }
+}
+
+function walletBtnClick(){
+  if(S.connected){
+    S.connected=false;S.wallet=null;S.totalXP=0;S.placed=0;S.bestXP=0;S.history=[];
+    pixMap.clear();fullRender();
+    document.getElementById('paintedCount').textContent='0';
+    document.getElementById('histList').innerHTML='<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.6rem;color:var(--text3);padding:8px 0;text-align:center;">No pixels yet</div>';
+    const btn=document.getElementById('walletBtn');
+    btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" fill="currentColor"/><path d="M22 11V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2"/></svg> CONNECT';
+    btn.classList.remove('connected');
+    refreshUI();
+  }else{openModal();}
+}
+async function onConnected(){
+  const btn=document.getElementById('walletBtn');
+  btn.innerHTML='&#x2713; '+S.wallet.slice(0,6)+'...'+S.wallet.slice(-4);
+  btn.classList.add('connected');
+  loadLocal();refreshUI();
+  if(S.pending){const {c,r}=S.pending;S.pending=null;await sleep(300);paint(c,r);}
+}
+
+// Toast
+let toastT;
+function showToast(msg,icon){
+  document.getElementById('tMsg').textContent=msg;
+  document.getElementById('tIcon').textContent=icon||'📢';
+  document.getElementById('toast').classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(hideToast,4000);
+}
+function hideToast(){document.getElementById('toast').classList.remove('show');}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// Init
+buildPalette();
+requestAnimationFrame(()=>requestAnimationFrame(init));
+</script>
+</body>
+</html>
