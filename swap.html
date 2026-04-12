@@ -2137,53 +2137,60 @@ function hideBadge() {
 }
 
 function renderUnclaimedBanner(rows) {
-  const banner = document.getElementById('unclaimed-banner');
-  const list   = document.getElementById('unclaimed-list');
+  var banner = document.getElementById('unclaimed-banner');
+  var list   = document.getElementById('unclaimed-list');
   if (!banner || !list) return;
-  const EVM_CHAINS = ['ethereum','base','polygon','arbitrum','bnb','ink','abstract','hyperevm','avalanche'];
+  var EVM_CHAINS = ['ethereum','base','polygon','arbitrum','bnb','ink','abstract','hyperevm','avalanche'];
+
+  // Store items keyed by row id so onclick can retrieve without quoting issues
+  window._unclaimedRows = {};
 
   list.innerHTML = rows.map(function(row) {
     var items = Array.isArray(row.items) ? row.items : JSON.parse(row.items || '[]');
+    window._unclaimedRows[row.id] = items;
     var tradeShort = row.trade_id ? row.trade_id.slice(0,12) + '...' : '---';
     var timeAgo = row.created_at ? formatTimeAgo(new Date(row.created_at)) : '';
     var chains = items.map(function(a){ return a.chain; }).filter(Boolean);
     var hasEVM = chains.some(function(c){ return EVM_CHAINS.indexOf(c) >= 0; });
-    var encodedItems = encodeURIComponent(JSON.stringify(items));
 
-    return '<div class="unclaimed-trade-card" id="utc-' + row.id + '">' +
-      '<div class="unclaimed-trade-meta">' +
-        '<span class="unclaimed-trade-id">Trade ' + escapeHtml(tradeShort) + '</span>' +
-        '<span class="unclaimed-trade-time">🕐 ' + escapeHtml(timeAgo) + '</span>' +
-      '</div>' +
-      '<div class="unclaimed-items-list">' +
-        items.map(function(a) {
-          return '<div class="unclaimed-item-row">' +
-            '<div class="unclaimed-item-emoji">' + escapeHtml(String(a.emoji || '📦')) + '</div>' +
-            '<div style="flex:1">' +
-              '<div class="unclaimed-item-name">' + escapeHtml(String(a.name || '')) + '</div>' +
-              '<div class="unclaimed-item-meta">' + escapeHtml(String(a.collection || '')) + ' · ' + escapeHtml(String(a.value || '')) + ' · ' + escapeHtml(String(a.chain || '')) + '</div>' +
-            '</div>' +
-            '<span class="unclaimed-item-badge ' + (a.type === 'coin' ? 'coin' : 'nft') + '">' + (a.type === 'coin' ? 'COIN' : 'NFT') + '</span>' +
-          '</div>';
-        }).join('') +
-      '</div>' +
-      (!hasEVM ? '<div class="unclaimed-chain-note">Non-EVM chain — accept the transfer in your wallet, then click Mark as Received.</div>' : '') +
-      '<button class="unclaimed-claim-btn" id="ucbtn-' + row.id + '" onclick="claimUnclaimedTrade('' + row.id + '', decodeURIComponent('' + encodedItems + ''))">' +
-        (hasEVM ? '⬇ Claim Items' : '✅ Mark as Received') +
-      '</button>' +
-    '</div>';
+    var itemsHTML = items.map(function(a) {
+      var badge = a.type === 'coin' ? 'coin' : 'nft';
+      var badgeText = a.type === 'coin' ? 'COIN' : 'NFT';
+      return '<div class="unclaimed-item-row">'
+        + '<div class="unclaimed-item-emoji">' + escapeHtml(String(a.emoji || 'box')) + '</div>'
+        + '<div style="flex:1">'
+        + '<div class="unclaimed-item-name">' + escapeHtml(String(a.name || '')) + '</div>'
+        + '<div class="unclaimed-item-meta">' + escapeHtml(String(a.collection || '')) + ' - ' + escapeHtml(String(a.value || '')) + ' - ' + escapeHtml(String(a.chain || '')) + '</div>'
+        + '</div>'
+        + '<span class="unclaimed-item-badge ' + badge + '">' + badgeText + '</span>'
+        + '</div>';
+    }).join('');
+
+    var chainNote = !hasEVM
+      ? '<div class="unclaimed-chain-note">Non-EVM chain - accept the transfer in your wallet, then click Mark as Received.</div>'
+      : '';
+
+    return '<div class="unclaimed-trade-card" id="utc-' + row.id + '">'
+      + '<div class="unclaimed-trade-meta">'
+      + '<span class="unclaimed-trade-id">Trade ' + escapeHtml(tradeShort) + '</span>'
+      + '<span class="unclaimed-trade-time">Time: ' + escapeHtml(timeAgo) + '</span>'
+      + '</div>'
+      + '<div class="unclaimed-items-list">' + itemsHTML + '</div>'
+      + chainNote
+      + '<button class="unclaimed-claim-btn" id="ucbtn-' + row.id + '" data-row-id="' + row.id + '" onclick="claimUnclaimedTrade(this.dataset.rowId)">'
+      + (hasEVM ? 'Claim Items' : 'Mark as Received')
+      + '</button>'
+      + '</div>';
   }).join('');
 
   banner.style.display = 'block';
 }
-
-async function claimUnclaimedTrade(rowId, itemsJSON) {
-  var items;
-  try { items = typeof itemsJSON === 'string' ? JSON.parse(itemsJSON) : itemsJSON; } catch(e) { items = []; }
+async function claimUnclaimedTrade(rowId) {
+  var items = (window._unclaimedRows && window._unclaimedRows[rowId]) || [];
   var btn = document.getElementById('ucbtn-' + rowId);
   if (!btn) return;
   btn.disabled = true;
-  btn.textContent = '⏳ Claiming...';
+  btn.textContent = 'Claiming...';
 
   var EVM_CHAINS = ['ethereum','base','polygon','arbitrum','bnb','ink','abstract','hyperevm','avalanche'];
   var evmItems = items.filter(function(a){ return EVM_CHAINS.indexOf(a.chain) >= 0; });
@@ -2193,20 +2200,19 @@ async function claimUnclaimedTrade(rowId, itemsJSON) {
       for (var i = 0; i < evmItems.length; i++) {
         var item = evmItems[i];
         btn.textContent = 'Signing for ' + item.name + '...';
-        var msg = 'Zentryx Unclaimed Claim\nItem: ' + item.name + '\nCollection: ' + item.collection + '\nRow: ' + rowId;
+        var msg = 'Zentryx Unclaimed Claim - Item: ' + item.name + ' - Collection: ' + item.collection + ' - Row: ' + rowId;
         await window.ethereum.request({ method: 'personal_sign', params: [msg, STATE.wallet] });
       }
     } catch(e) {
       if (e.code === 4001) {
         btn.disabled = false;
-        btn.textContent = '⬇ Claim Items';
+        btn.textContent = 'Claim Items';
         return;
       }
       console.error('EVM claim error', e);
     }
   }
 
-  // Mark claimed in Supabase
   try {
     await fetch(SUPABASE_URL + '/rest/v1/unclaimed_items?id=eq.' + rowId, {
       method: 'PATCH',
@@ -2216,12 +2222,9 @@ async function claimUnclaimedTrade(rowId, itemsJSON) {
   } catch(e) { console.error('mark claimed failed', e); }
 
   btn.className = 'unclaimed-claim-btn done';
-  btn.textContent = '✅ Claimed!';
-
-  // Refresh badge
+  btn.textContent = 'Claimed!';
   await checkUnclaimedItems();
 }
-
 function dismissUnclaimedBanner() {
   var b = document.getElementById('unclaimed-banner');
   if (b) b.style.display = 'none';
