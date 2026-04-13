@@ -915,15 +915,18 @@ async function saveData() {
   }));
   try {
     const short = S.wallet.slice(0,6)+'...'+S.wallet.slice(-4);
-    await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
+    await fetch(`${SUPABASE_URL}/rest/v1/rpc/upsert_player_xp`, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        wallet: short, total_xp: S.totalXP,
-        games_played: S.spins, updated_at: new Date().toISOString()
+        p_wallet: short,
+        p_game:   'wheel',
+        p_xp:     S.totalXP,
+        p_games:  S.spins,
+        p_chain:  'ink'
       })
     });
   } catch(e) { console.error('Leaderboard sync failed:', e); }
