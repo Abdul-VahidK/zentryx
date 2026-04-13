@@ -228,21 +228,21 @@ header::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px
       <span class="podium-medal">🥈</span>
       <div class="podium-wallet" id="pod2-wallet">—</div>
       <div class="podium-xp" id="pod2-xp">—</div>
-      <div class="podium-xp-label">XP</div>
+      <div class="podium-xp-label">💎 GEMS</div>
     </div>
     <!-- 1st place (center, taller) -->
     <div class="podium-card rank-1" id="pod1">
       <span class="podium-medal">🥇</span>
       <div class="podium-wallet" id="pod1-wallet">—</div>
       <div class="podium-xp" id="pod1-xp">—</div>
-      <div class="podium-xp-label">XP</div>
+      <div class="podium-xp-label">GEMS</div>
     </div>
     <!-- 3rd place -->
     <div class="podium-card rank-3" id="pod3">
       <span class="podium-medal">🥉</span>
       <div class="podium-wallet" id="pod3-wallet">—</div>
       <div class="podium-xp" id="pod3-xp">—</div>
-      <div class="podium-xp-label">XP</div>
+      <div class="podium-xp-label">GEMS</div>
     </div>
   </div>
 
@@ -265,7 +265,7 @@ header::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px
     <div class="lb-head">
       <div>RANK</div>
       <div>ADDRESS</div>
-      <div>XP</div>
+      <div>GEMS</div>
       <div>GAMES</div>
       <div>WINS</div>
       <div>CHAIN</div>
@@ -401,7 +401,7 @@ async function renderLeaderboard() {
 
   let data;
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?order=total_xp.desc&limit=20`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/player_stats?order=total_gems.desc&limit=20`, {
       headers:{ 'apikey':SUPABASE_KEY, 'Authorization':`Bearer ${SUPABASE_KEY}` }
     });
     data = await res.json();
@@ -428,7 +428,7 @@ async function renderLeaderboard() {
     const p = top3[idx];
     if (p) {
       document.getElementById(id+'-wallet').textContent = p.wallet;
-      document.getElementById(id+'-xp').textContent = (p.total_xp||0).toLocaleString();
+      document.getElementById(id+'-xp').textContent = (p.total_gems||0).toLocaleString();
     }
   });
 
@@ -452,9 +452,9 @@ async function renderLeaderboard() {
     return `<div class="lb-row${isMe?' me':''}">
       ${rankCell}
       <div class="lb-addr">${p.wallet}${isMe?'<span class="you-tag">YOU</span>':''}</div>
-      <div class="lb-xp-cell" style="color:${xpColor}">${(p.total_xp||0).toLocaleString()}</div>
+      <div class="lb-xp-cell" style="color:${xpColor}">💎 ${(p.total_gems||0).toLocaleString()}</div>
       <div class="lb-cell">${p.games_played||0}</div>
-      <div class="lb-wins">${wins}</div>
+      <div class="lb-cell" style="color:var(--sky3);font-size:0.72rem;">${(p.total_game_xp||0).toLocaleString()} XP</div>
       <div class="chain-pill-row">
         <div class="chain-pip ${chain}"></div>
         <span class="chain-lbl ${chain}">${chain.charAt(0).toUpperCase()+chain.slice(1)}</span>
