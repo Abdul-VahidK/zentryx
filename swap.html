@@ -1233,9 +1233,11 @@ const AssetType = { ERC721: 0, ERC1155: 1, ERC20: 2, NATIVE_ETH: 3 };
 const EVM_CHAINS = ['ethereum','base','polygon','arbitrum','bnb','ink','abstract','hyperevm','avalanche','sepolia'];
 
 // Convert Supabase UUID string to bytes32
-function uuidToBytes32(uuid) {
-  const hex = uuid.replace(/-/g,'').padEnd(64,'0').slice(0,64);
-  return '0x' + hex;
+function uuidToBytes32(uuid, nonce = 0) {
+  // Append nonce so re-used sessions after cancel get a fresh on-chain tradeId
+  const hex = uuid.replace(/-/g,'').padEnd(60,'0').slice(0,60);
+  const nonceHex = nonce.toString(16).padStart(4,'0');
+  return '0x' + hex + nonceHex;
 }
 
 async function getSwapContract(signerOrProvider) {
@@ -1351,6 +1353,7 @@ let _peerOffer     = [];    // snapshot of peer's offer at confirm time
 let _livePeerOffer = [];    // live peer offer synced during trading
 let _lastPeerOfferJSON = null; // tracks last rendered peer offer to prevent unnecessary re-renders
 let CURRENT_SESSION_ID = null;  // shared session ID for lock/disconnect signals
+let _tradeNonce = 0;  // increments each cancel so new deposits get a fresh on-chain tradeId
 let lockPollInterval = null;
 let _sessionInitiator = null;   // MY_CODE if I created the request, else peer's code
 
@@ -1991,26 +1994,50 @@ function startLockPoll(peerCode) {
       // Detect if peer cancelled (their offer field went null while we had items)
       // Indicated by: peer's offer became null AND my own offer field also became null
       // (cancelTrade on-chain returns everything so both sides' on-chain slots are gone)
-      if (_lastPeerOfferJSON !== null && peerOfferRaw === null && myOffer.length > 0 && !myLocked) {
+      if (_lastPeerOfferJSON !== null && peerOfferRaw === null && myOffer.length > 0) {  // fire regardless of lock state
         // Peer cancelled the trade — their assets AND ours are returned on-chain
         // Re-fetch inventory so our returned items reappear
         const wasLen = myOffer.length;
         myOffer = [];
         selectedItems.clear();
+        _tradeNonce++; // peer cancelled — bump nonce so our next deposit is fresh
         _lastPeerOfferJSON = null;
         _livePeerOffer = [];
+
+        // Reset all lock state — peer's cancel ends the trade
+        myLocked = false; peerLocked = false; myConfirmed = false;
+        const lb = document.getElementById('lock-btn');
+        if (lb) { lb.className = 'lock-btn'; lb.textContent = '🔒 Lock Trade'; lb.disabled = false; }
+        const mc = document.getElementById('my-circle');
+        if (mc) { mc.textContent = '🔓'; mc.style.cssText = 'background:rgba(56,189,248,.1);border:2px solid var(--border-color)'; }
+        document.getElementById('my-status').textContent = 'Not Locked';
+        document.getElementById('my-status').style.color = '';
+        const pc = document.getElementById('peer-circle');
+        if (pc) { pc.textContent = '🔓'; pc.style.cssText = 'background:rgba(56,189,248,.1);border:2px solid var(--border-color)'; }
+        document.getElementById('peer-status').textContent = 'Not Locked';
+        document.getElementById('peer-status').style.color = '';
+        const cancelBtn = document.getElementById('cancel-trade-btn');
+        if (cancelBtn) { cancelBtn.disabled = true; cancelBtn.textContent = '↩ Cancel Trade'; }
+        updateConfirmBtn();
+
         renderMyOffer();
         renderInventory();
+
+        // Re-fetch inventory so returned items reappear
         _fetchedChains.clear();
         ALL_ASSETS = [];
         fetchWalletAssets();
-        addSystemMessage('⚠ Peer cancelled the trade — all assets returned to wallets.');
-        // Show toast
+
+        // Log activity and notify
+        logActivity('trade_cancelled_by_peer', 'Peer cancelled the trade — all assets returned to wallets');
+        addSystemMessage('⚠ Peer cancelled the trade — your items have been returned to your wallet.');
+
+        // Show prominent toast
         const toast = document.createElement('div');
-        toast.style.cssText = 'position:fixed;top:76px;left:50%;transform:translateX(-50%);background:rgba(239,68,68,.92);color:#fff;padding:10px 22px;border-radius:10px;font-family:JetBrains Mono,monospace;font-size:.65rem;z-index:9999;letter-spacing:.5px;';
-        toast.textContent = '⚠ Peer cancelled the trade — your items have been returned';
+        toast.style.cssText = 'position:fixed;top:76px;left:50%;transform:translateX(-50%);background:rgba(239,68,68,.92);color:#fff;padding:12px 28px;border-radius:10px;font-family:JetBrains Mono,monospace;font-size:.68rem;z-index:9999;letter-spacing:.5px;box-shadow:0 4px 20px rgba(239,68,68,.4);';
+        toast.innerHTML = '⚠ Peer cancelled the trade<br><span style="opacity:.8;font-size:.58rem">Your items have been returned to your wallet</span>';
         document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
+        setTimeout(() => toast.remove(), 5000);
       }
 
       // Only re-render peer offer if the raw value has changed — prevents blink on every poll tick
@@ -2167,7 +2194,7 @@ async function lockTrade() {
   const cancelBtn = document.getElementById('cancel-trade-btn');
   if (cancelBtn) cancelBtn.disabled = false;
 
-  addSystemMessage('🔒 You locked your offer — peer notified');
+  logActivityAndNotifyPeer('offer_locked', `${MY_CODE} locked their offer — waiting for peer`);
 
   // Signal lock to Supabase so peer sees it
   if (CURRENT_SESSION_ID) {
@@ -2202,12 +2229,12 @@ async function cancelTrade() {
       const provider  = new ethers.BrowserProvider(window.ethereum);
       const signer    = await provider.getSigner();
       const contract  = await getSwapContract(signer);
-      const tradeId   = uuidToBytes32(CURRENT_SESSION_ID);
+      const tradeId   = uuidToBytes32(CURRENT_SESSION_ID, _tradeNonce);
 
       addSystemMessage('Cancelling trade on-chain — returning all assets...');
       const tx = await contract.cancelTrade(tradeId);
       await tx.wait();
-      addSystemMessage('✓ Trade cancelled — all assets returned to wallets');
+      logActivityAndNotifyPeer('trade_cancelled', 'Trade cancelled — all assets returned to wallets', tx.hash);
     } catch(e) {
       console.error('cancelTrade on-chain error:', e);
       if (e.code === 4001 || e.code === 'ACTION_REJECTED') {
@@ -2220,9 +2247,12 @@ async function cancelTrade() {
     }
   }
 
-  // Reset MY state only — do NOT wipe peer's offer from Supabase
+  // Note on Issue 2: If peer already called cancelTrade(), the contract returned
+  // BOTH parties' assets atomically in that tx. So A's items are already back in
+  // their wallet. The UI just didn't know — the reset below + re-fetch fixes that.
   myOffer = []; myLocked = false; myConfirmed = false;
   selectedItems.clear(); // clear any lingering selections
+  _tradeNonce++; // new on-chain ID for the next round of deposits
 
   const lb = document.getElementById('lock-btn');
   lb.className = 'lock-btn'; lb.textContent = '🔒 Lock Trade'; lb.disabled = false;
@@ -3099,10 +3129,19 @@ async function addSelectedToOffer() {
       const myAddr2       = await signer2.getAddress();
       const contract     = await getSwapContract(signer2);
       const contractAddr = await contract.getAddress();
-      const tradeId      = uuidToBytes32(CURRENT_SESSION_ID);
+      const tradeId      = uuidToBytes32(CURRENT_SESSION_ID, _tradeNonce);
 
-      // Open trade on-chain if not yet registered
-      const [partyA] = await contract.getTradeParties(tradeId).catch(() => ['0x0000000000000000000000000000000000000000']);
+      // Open trade on-chain if not yet registered OR if previous was cancelled
+      let [partyA] = await contract.getTradeParties(tradeId).catch(() => ['0x0000000000000000000000000000000000000000']);
+      // If trade exists but is already finalised (cancelled/executed), bump nonce and use fresh ID
+      if (partyA !== '0x0000000000000000000000000000000000000000') {
+        const [executed, devClaimed] = await contract.getTradeStatus(tradeId).catch(() => [false, false]);
+        if (executed || devClaimed) {
+          _tradeNonce++;
+          const tradeId = uuidToBytes32(CURRENT_SESSION_ID, _tradeNonce);
+          [partyA] = await contract.getTradeParties(tradeId).catch(() => ['0x0000000000000000000000000000000000000000']);
+        }
+      }
       if (partyA === '0x0000000000000000000000000000000000000000') {
         addSystemMessage('Opening trade on-chain...');
         const res  = await fetch(
@@ -3114,7 +3153,7 @@ async function addSelectedToOffer() {
         const openTx = await contract.openTrade(tradeId, data[0].from_wallet, data[0].to_wallet);
         addSystemMessage('Waiting for openTrade...');
         await openTx.wait();
-        addSystemMessage('✓ Trade opened on-chain');
+        logActivityAndNotifyPeer('trade_opened', 'Trade opened on-chain — both wallets registered');
       }
 
       // Deposit each selected item
@@ -3158,7 +3197,7 @@ async function addSelectedToOffer() {
         const isA = (myAddr2.toLowerCase() === (await contract.getTradeParties(tradeId))[0].toLowerCase());
         item._slotIndex = Number(isA ? countA : countB) - 1;
 
-        addSystemMessage(`✓ ${label} deposited on-chain`);
+        logActivityAndNotifyPeer('asset_deposited', `${label} deposited into escrow`, tx.hash);
         myOffer.push(item);
       }
 
@@ -3346,13 +3385,13 @@ async function removeFromOffer(id) {
         const provider  = new ethers.BrowserProvider(window.ethereum);
         const signer    = await provider.getSigner();
         const contract  = await getSwapContract(signer);
-        const tradeId   = uuidToBytes32(CURRENT_SESSION_ID);
+        const tradeId   = uuidToBytes32(CURRENT_SESSION_ID, _tradeNonce);
         const label     = item.name || item.collection || 'item';
 
         addSystemMessage(`Withdrawing ${label} from escrow...`);
         const tx = await contract.withdrawAsset(tradeId, item._slotIndex);
         await tx.wait();
-        addSystemMessage(`✓ ${label} returned to your wallet`);
+        logActivityAndNotifyPeer('asset_withdrawn', `${label} removed from escrow and returned to wallet`, tx.hash);
       } catch(e) {
         console.error('withdrawAsset error:', e);
         if (e.code === 4001 || e.code === 'ACTION_REJECTED') {
@@ -3636,7 +3675,7 @@ async function finalConfirmTrade() {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer   = await provider.getSigner();
       const contract = await getSwapContract(signer);
-      const tradeId  = uuidToBytes32(CURRENT_SESSION_ID);
+      const tradeId  = uuidToBytes32(CURRENT_SESSION_ID, _tradeNonce);
 
       // Calculate total trade value for fee tier
       const allItems = [...myOffer, ..._peerOffer];
@@ -3658,7 +3697,7 @@ async function finalConfirmTrade() {
         addSystemMessage('Waiting for executeSwap confirmation...');
         await tx.wait();
         txHash = tx.hash;
-        addSystemMessage('✅ Swap executed on-chain: ' + tx.hash.slice(0,14) + '...');
+        logActivityAndNotifyPeer('swap_executed', '✅ Swap executed — assets transferred to both wallets', tx.hash);
       }
     } catch(e) {
       console.error('executeSwap error:', e);
@@ -4234,6 +4273,17 @@ async function fetchNewMessages() {
 function renderMessage(msg, isMine) {
   const container = document.getElementById('chat-messages');
   if (!container) return;
+
+  // SYSTEM messages (from logActivityAndNotifyPeer) render as system notifications
+  if (msg.sender_code === 'SYSTEM') {
+    const div = document.createElement('div');
+    div.className = 'chat-system';
+    div.textContent = msg.message;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return;
+  }
+
   const div    = document.createElement('div');
   div.className = 'chat-msg ' + (isMine ? 'mine' : 'theirs');
   const time   = new Date(msg.created_at).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
@@ -4257,6 +4307,66 @@ function addSystemMessage(text) {
   div.textContent = text;
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
+}
+
+// ── Activity Logging ──────────────────────────────────────────────
+// Saves all key trade events to Supabase trade_activity table.
+// Also posts as system message in chat so both users see it live.
+// Schema: trade_id, wallet, event_type, detail, tx_hash, created_at
+async function logActivity(eventType, detail = '', txHash = null) {
+  if (!CURRENT_SESSION_ID) return;
+
+  // Post to chat as system message (visible to both users in real time)
+  const systemText = `[${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}] ${detail}`;
+  addSystemMessage(systemText);
+
+  // Save to Supabase for permanent record
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/trade_activity`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        trade_id:   CURRENT_SESSION_ID,
+        wallet:     STATE.wallet || null,
+        event_type: eventType,
+        detail:     detail,
+        tx_hash:    txHash || null,
+      })
+    });
+  } catch(e) {
+    // Logging failure should never block the user — silent fail
+    console.warn('logActivity failed:', e);
+  }
+}
+
+// ── Also broadcast activity via trade_messages so peer sees it ───
+async function logActivityAndNotifyPeer(eventType, detail = '', txHash = null) {
+  logActivity(eventType, detail, txHash); // save to trade_activity
+
+  // Also post as a system message in the shared chat (via trade_messages)
+  // so the PEER sees it in their chat panel immediately
+  if (!CURRENT_SESSION_ID || !CHAT_TRADE_ID) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/trade_messages`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        trade_id:     CHAT_TRADE_ID,
+        sender_code:  'SYSTEM',
+        sender_wallet: STATE.wallet || null,
+        message:      `⚙ ${detail}`,
+      })
+    });
+  } catch(e) {}
 }
 
 function escapeHtml(str) {
